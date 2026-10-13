@@ -1,0 +1,5435 @@
+Albatta. Keyingi safar shu faylni yuborsang, **qayerda qolganimizni darhol tushunaman**. Men uni tartibli qilib, 0-dan hozirgi holatimizgacha jamladim.
+
+ Electronics Store — Django Backend Bosqichlari
+
+# Electronics Store — Django Backend
+
+ ## Maqsad
+
+ `electronics_store` nomli online electronics shop yaratish.
+
+ Backend:
+
+ - Python
+- Django
+- Django REST Framework
+- SQLite
+- Pillow
+
+ Frontendni keyinroq ulaymiz.
+
+---
+
+ # 1\. Loyiha papkasi
+
+ Kompyuterda:
+
+```
+C:\Users\support\Desktop\electronics_store
+```
+
+ Loyiha ichida backend yaratildi:
+
+```
+electronics_store/
+└── back-end/
+```
+
+ Python virtual environment ham yaratildi va ishlatildi:
+
+```
+(venv)
+```
+
+ Python versiyasi:
+
+```
+3.13.2
+```
+
+---
+
+ # 2\. Django o‘rnatish
+
+ Virtual environment ichida Django o‘rnatildi.
+
+ Tekshirish:
+
+```
+python --version
+```
+
+---
+
+ # 3\. Django project yaratish
+
+ `back-end` ichida:
+
+```
+django-admin startproject config .
+```
+
+ Natijada:
+
+```
+back-end/
+├── manage.py
+└── config/
+    ├── settings.py
+    ├── urls.py
+    ├── asgi.py
+    └── wsgi.py
+```
+
+---
+
+ # 4\. Django ishlashini tekshirish
+
+```
+python manage.py runserver
+```
+
+ Browser:
+
+```
+http://127.0.0.1:8000/
+```
+
+ Django default raketa sahifasi chiqdi.
+
+ Bu server ishlayotganini bildiradi.
+
+---
+
+ # 5\. Users app
+
+ Backendda `users` app yaratildi:
+
+```
+python manage.py startapp users
+```
+
+---
+
+ # 6\. Products app
+
+ Backendda `products` app yaratildi:
+
+```
+python manage.py startapp products
+```
+
+---
+
+ # 7\. Categories app
+
+ Backendda `categories` app yaratildi:
+
+```
+python manage.py startapp categories
+```
+
+---
+
+ # 8\. settings.py
+
+ `config/settings.py` ichidagi `INSTALLED_APPS`ga quyidagilar qo‘shildi:
+
+```
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    'rest_framework',
+    'users',
+    'products',
+    'categories',
+]
+```
+
+ Muhim:\
+ `'rest_framework',` oxirida vergul bo‘lishi kerak.
+
+---
+
+ # 9\. Product model
+
+ `products/models.py` dastlab quyidagicha yaratildi:
+
+```
+from django.db import models
+
+class Product(models.Model):
+    name = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    stock = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+```
+
+---
+
+ # 10\. Product migration
+
+```
+python manage.py makemigrations
+```
+
+ Natijada:
+
+```
+products\migrations\0001_initial.py
++ Create model Product
+```
+
+---
+
+ # 11\. Database migration
+
+```
+python manage.py migrate
+```
+
+---
+
+ # 12\. Product Admin
+
+ `products/admin.py`:
+
+```
+from django.contrib import admin
+from .models import Product
+
+admin.site.register(Product)
+```
+
+---
+
+ # 13\. Admin Panel
+
+ Server:
+
+```
+python manage.py runserver
+```
+
+ Admin:
+
+```
+http://127.0.0.1:8000/admin/
+```
+
+ Product Admin Panelda ko‘rindi.
+
+---
+
+ # 14\. Birinchi demo Product
+
+ Admin Panel orqali:
+
+```
+Name:
+iPhone 15
+
+Price:
+799.99
+
+Description:
+Apple iPhone 15 smartphone
+
+Stock:
+10
+```
+
+ mahsulot yaratilgan.
+
+ Keyinchalik yana:
+
+```
+Name:
+iPhone 19 Pro Max
+
+Price:
+1299.99
+
+Description:
+Premium flagship smartphone with advanced performance, camera system, and modern design.
+
+Stock:
+10
+```
+
+ mahsuloti yaratildi.
+
+ Bu loyiha uchun demo mahsulot.
+
+---
+
+ # 15\. Category model
+
+ `categories/models.py`:
+
+```
+from django.db import models
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+```
+
+---
+
+ # 16\. Category migration
+
+```
+python manage.py makemigrations
+```
+
+ Keyin:
+
+```
+python manage.py migrate
+```
+
+---
+
+ # 17\. Category Admin
+
+ `categories/admin.py`:
+
+```
+from django.contrib import admin
+from .models import Category
+
+admin.site.register(Category)
+```
+
+---
+
+ # 18\. Category'lar yaratildi
+
+ Admin Panel orqali quyidagi kategoriyalar yaratildi:
+
+```
+Smartphones
+Laptops
+Headphones
+```
+
+ Description:
+
+```
+Smartphones and mobile devices
+Laptops and notebooks
+Headphones and audio devices
+```
+
+---
+
+ # 19\. Product + Category relationship
+
+ `products/models.py`ga `category` qo‘shildi.
+
+ Hozirgi Product modelining to‘liq holati:
+
+```
+from django.db import models
+
+class Product(models.Model):
+    category = models.ForeignKey(
+        'categories.Category',
+        on_delete=models.CASCADE,
+        related_name='products',
+        null=True,
+        blank=True
+    )
+    name = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    stock = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+```
+
+ `null=True` va `blank=True` eski Product mavjud bo‘lgani uchun qo‘shildi.
+
+---
+
+ # 20\. Category relationship migration
+
+```
+python manage.py makemigrations
+```
+
+ Natija:
+
+```
+products\migrations\0002_product_category.py
++ Add field category to product
+```
+
+ Keyin:
+
+```
+python manage.py migrate
+```
+
+---
+
+ # 21\. Product'ga Category berish
+
+ Admin Panel:
+
+```
+Products
+→ iPhone 19 Pro Max
+→ Category
+→ Smartphones
+→ Save
+```
+
+ Natija:
+
+```
+Smartphones
+    ↓
+iPhone 19 Pro Max
+```
+
+---
+
+ # 22\. Pillow o‘rnatish
+
+ Product rasmlarini qo‘shish uchun:
+
+```
+pip install Pillow
+```
+
+---
+
+ # 23\. Product image
+
+ `products/models.py`ga:
+
+```
+image = models.ImageField(
+    upload_to='products/',
+    blank=True,
+    null=True
+)
+```
+
+ qo‘shildi.
+
+ To‘liq model:
+
+```
+from django.db import models
+
+class Product(models.Model):
+    category = models.ForeignKey(
+        'categories.Category',
+        on_delete=models.CASCADE,
+        related_name='products',
+        null=True,
+        blank=True
+    )
+    name = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    stock = models.PositiveIntegerField(default=0)
+    image = models.ImageField(
+        upload_to='products/',
+        blank=True,
+        null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+```
+
+---
+
+ # 24\. Image migration
+
+```
+python manage.py makemigrations
+```
+
+ Natija:
+
+```
+products\migrations\0003_product_image.py
++ Add field image to product
+```
+
+ Keyin:
+
+```
+python manage.py migrate
+```
+
+---
+
+ # 25\. Django REST Framework
+
+ O‘rnatildi:
+
+```
+pip install djangorestframework
+```
+
+ `settings.py`ga:
+
+```
+'rest_framework',
+```
+
+ qo‘shildi.
+
+---
+
+ # 26\. Product Serializer
+
+ `products/serializers.py` yaratildi.
+
+ Ichida:
+
+```
+from rest_framework import serializers
+from .models import Product
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+```
+
+---
+
+ # 27\. Product API View
+
+ `products/views.py`:
+
+```
+from rest_framework import viewsets
+from .models import Product
+from .serializers import ProductSerializer
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+```
+
+ Bu API orqali Product:
+
+ - ko‘riladi
+- qo‘shiladi
+- o‘zgartiriladi
+- o‘chiriladi
+
+---
+
+ # 28\. Product API URL
+
+ `products/urls.py` yaratildi:
+
+```
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ProductViewSet
+
+router = DefaultRouter()
+router.register('products', ProductViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+```
+
+ Muhim:\
+ Fayl boshida ortiqcha:
+
+```
+from
+```
+
+ qatori bor edi va o‘chirildi.
+
+---
+
+ # 29\. Main URL
+
+ `config/urls.py`:
+
+```
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('products.urls')),
+]
+```
+
+---
+
+ # 30\. Xatolik va tuzatish
+
+ Serverda:
+
+```
+ModuleNotFoundError: No module named 'rest_frameworkusers'
+```
+
+ xatosi chiqdi.
+
+ Sabab:\
+ `settings.py`da:
+
+```
+'rest_framework'
+'users',
+```
+
+ orasida vergul yo‘q edi.
+
+ To‘g‘ri holat:
+
+```
+'rest_framework',
+'users',
+```
+
+ qilib tuzatildi.
+
+---
+
+ # 31\. Products API tekshirildi
+
+ Server:
+
+```
+python manage.py runserver
+```
+
+ Browser:
+
+```
+http://127.0.0.1:8000/api/products/
+```
+
+ ochildi.
+
+ Product API ishladi.
+
+---
+
+ # HOZIRGI HOLAT
+
+ Backend hozir quyidagicha:
+
+```
+electronics_store/
+│
+├── back-end/
+│   ├── manage.py
+│   │
+│   ├── config/
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   ├── asgi.py
+│   │   └── wsgi.py
+│   │
+│   ├── users/
+│   │
+│   ├── products/
+│   │   ├── migrations/
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_product_category.py
+│   │   │   └── 0003_product_image.py
+│   │   ├── admin.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   │
+│   ├── categories/
+│   │   ├── migrations/
+│   │   ├── admin.py
+│   │   └── models.py
+│   │
+│   └── db.sqlite3
+│
+└── venv/
+```
+
+---
+
+ # QAYERDA QOLDIK?
+
+ Biz **40-qadamni boshlash arafasidamiz.**
+
+ Keyingi vazifa:
+
+```
+categories/serializers.py
+```
+
+ faylini yaratish.
+
+ Unga:
+
+```
+from rest_framework import serializers
+from .models import Category
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+```
+
+ yoziladi.
+
+ Keyin Category API qilamiz.
+
+---
+
+ # KEYINGI REJA
+
+ Backendni quyidagi tartibda davom ettiramiz:
+
+ 1. Category Serializer
+2. Category API View
+3. Category URL
+4. Category API tekshirish
+5. Product API'ni yaxshilash
+6. User/Register
+7. Login
+8. Authentication
+9. Cart
+10. Order
+11. OrderItem
+12. Frontendni Django API bilan ulash
+13. Productlarni frontendda chiqarish
+14. Category filter
+15. Cart frontend
+16. Login/Register frontend
+17. Yakuniy test
+
+ **Muhim:** keyingi safar shu faylni yuborsang, biz aynan:
+
+ > **40-qadam — `categories/serializers.py`**
+
+ dan davom etamiz.
+
+ Hamma narsani qaytadan boshlash shart emas.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Ha, to‘g‘ri. 👍 Keyingi safar menga ham ancha oson bo‘ladi. `BACKEND_PROGRESS.txt` ichiga **to‘liq qolgan reja**ni ham qo‘shib qo‘y.
+
+ Quyidagini faylning oxiriga qo‘sh:
+
+ Electronics Store — Qolgan qadamlar
+
+# QOLGAN QADAMLAR
+
+ ## Category API
+
+ 40. `categories/serializers.py` yaratish
+41. `categories/views.py` yozish
+42. `categories/urls.py` yaratish
+43. `config/urls.py`ga Category API ulash
+44. Category API'ni browserda tekshirish
+
+ ## Product API
+
+ 45. Product API'ni tekshirish va kerakli maydonlarni tartibga keltirish
+46. Product detail API
+47. Product category filter
+48. Product search
+
+ ## User tizimi
+
+ 49. User/Register
+50. Login
+51. Logout
+52. Authentication
+53. User API
+54. Admin/user permissions
+
+ ## Cart
+
+ 55. Cart model
+56. CartItem model
+57. Cart API
+58. Mahsulotni savatchaga qo‘shish
+59. Mahsulot sonini o‘zgartirish
+60. Savatchadan o‘chirish
+
+ ## Order
+
+ 61. Order model
+62. OrderItem model
+63. Buyurtma yaratish API
+64. Buyurtmalarni ko‘rish
+65. Buyurtma statuslari
+
+ ## Media va sozlamalar
+
+ 66. Product rasmlarini to‘g‘ri chiqarish
+67. `MEDIA_URL`
+68. `MEDIA_ROOT`
+69. Static fayllar
+70. CORS sozlash
+
+ ## Frontend bilan ulash
+
+ 71. Frontendni backend API bilan ulash
+72. Productlarni frontendda chiqarish
+73. Categorylarni frontendda chiqarish
+74. Search
+75. Filter
+76. Product detail
+77. Cart frontend
+78. Login/Register frontend
+79. Checkout
+80. Order history
+
+ ## Yakuniy
+
+ 81. Admin Panelni tartibga keltirish
+82. API'larni tekshirish
+83. Xatolarni tuzatish
+84. Frontend + Backend to‘liq test
+85. Loyihani productionga tayyorlash
+
+---
+
+ # HOZIRGI JOY
+
+ Biz **39-qadamni tugatdik**.
+
+ Keyingi qadam:
+
+ **40-qadam — `categories/serializers.py` yaratish.**
+
+ Keyingi safar shu fayldan davom etamiz.
+
+---
+
+ # MUHIM
+
+ Har bir qadamni **birma-bir** qilamiz.
+
+ Men keyingi qadamni beraman → sen bajarasiz → `boldi` deysiz → keyingi qadamga o'tamiz.
+
+ Agar xato chiqsa, xatoni yuborasiz va avval xatoni tuzatamiz.
+
+ Oldingi qadamlarni keraksiz takrorlamaymiz.
+
+ QOLGAN QADAMLAR
+Category API
+
+categories/serializers.py yaratish
+
+categories/views.py yozish
+
+categories/urls.py yaratish
+
+config/urls.pyga Category API ulash
+
+Category API'ni browserda tekshirish
+
+Product API
+
+Product API'ni tekshirish va kerakli maydonlarni tartibga keltirish
+
+Product detail API
+
+Product category filter
+
+Product search
+
+User tizimi
+
+User/Register
+
+Login
+
+Logout
+
+Authentication
+
+User API
+
+Admin/user permissions
+
+Cart
+
+Cart model
+
+CartItem model
+
+Cart API
+
+Mahsulotni savatchaga qo‘shish
+
+Mahsulot sonini o‘zgartirish
+
+Savatchadan o‘chirish
+
+Order
+
+Order model
+
+OrderItem model
+
+Buyurtma yaratish API
+
+Buyurtmalarni ko‘rish
+
+Buyurtma statuslari
+
+Media va sozlamalar
+
+Product rasmlarini to‘g‘ri chiqarish
+
+MEDIA_URL
+
+MEDIA_ROOT
+
+Static fayllar
+
+CORS sozlash
+
+Frontend bilan ulash
+
+Frontendni backend API bilan ulash
+
+Productlarni frontendda chiqarish
+
+Categorylarni frontendda chiqarish
+
+Search
+
+Filter
+
+Product detail
+
+Cart frontend
+
+Login/Register frontend
+
+Checkout
+
+Order history
+
+Yakuniy
+
+Admin Panelni tartibga keltirish
+
+API'larni tekshirish
+
+Xatolarni tuzatish
+
+Frontend + Backend to‘liq test
+
+Loyihani productionga tayyorlash
+
+HOZIRGI JOY
+
+Biz 39-qadamni tugatdik.
+
+Keyingi qadam:
+
+40-qadam — categories/serializers.py yaratish.
+
+Keyingi safar shu fayldan davom etamiz.
+
+MUHIM
+
+Har bir qadamni birma-bir qilamiz.
+
+Men keyingi qadamni beraman → sen bajarasiz → boldi deysiz → keyingi qadamga o'tamiz.
+
+Agar xato chiqsa, xatoni yuborasiz va avval xatoni tuzatamiz.
+
+Oldingi qadamlarni keraksiz takrorlamaymiz.
+
+#
+#
+#
+#
+
+#
+3
+3
+#
+##
+#
+
+#
+#
+#
+#
+#
+3
+3
+3
+#
+#
+#
+3
+3
+
+3
+3
+3
+Albatta. Mana **bitta oddiy matn/list ko‘rinishida**, keyinchalik shu faylni menga yuborsang, qayerda qolganimizni aniq tushunaman.
+
+```
+ELECTRONICS STORE — DJANGO BACKEND PROGRESS
+
+MAQSAD:
+electronics_store nomli online electronics shop yaratish.
+
+TECHNOLOGIYALAR:
+- Python
+- Django
+- Django REST Framework
+- SQLite
+- Pillow
+- django-filter
+- djangorestframework-simplejwt
+
+LOYIHA JOYI:
+C:\Users\support\Desktop\electronics_store\back-end
+
+==================================================
+BAJARILGAN QADAMLAR
+==================================================
+
+1. Loyiha papkasi yaratildi — BAJARILDI
+2. back-end papkasi yaratildi — BAJARILDI
+3. Virtual environment yaratildi — BAJARILDI
+4. Django o‘rnatildi — BAJARILDI
+5. Django project (config) yaratildi — BAJARILDI
+6. Django server ishlashi tekshirildi — BAJARILDI
+7. users app yaratildi — BAJARILDI
+8. products app yaratildi — BAJARILDI
+9. categories app yaratildi — BAJARILDI
+10. rest_framework settings.py ga qo‘shildi — BAJARILDI
+
+11. Product model yaratildi — BAJARILDI
+12. Product migration qilindi — BAJARILDI
+13. Database migration qilindi — BAJARILDI
+14. Product Admin'ga ulandi — BAJARILDI
+15. Admin Panel tekshirildi — BAJARILDI
+16. Demo Product yaratildi — BAJARILDI
+
+17. Category model yaratildi — BAJARILDI
+18. Category migration qilindi — BAJARILDI
+19. Category Admin'ga ulandi — BAJARILDI
+20. Categories yaratildi:
+    - Smartphones
+    - Laptops
+    - Headphones
+    — BAJARILDI
+
+21. Product va Category ForeignKey relationship qilindi — BAJARILDI
+22. Relationship migration qilindi — BAJARILDI
+23. Product'ga Category berildi — BAJARILDI
+
+24. Pillow o‘rnatildi — BAJARILDI
+25. Product'ga ImageField qo‘shildi — BAJARILDI
+26. Image migration qilindi — BAJARILDI
+
+27. Django REST Framework sozlandi — BAJARILDI
+28. ProductSerializer yaratildi — BAJARILDI
+29. ProductViewSet yaratildi — BAJARILDI
+30. products/urls.py yaratildi — BAJARILDI
+31. Product API main URL'ga ulandi — BAJARILDI
+32. URL/settings xatolari tuzatildi — BAJARILDI
+33. Product API tekshirildi — BAJARILDI
+
+34. CategorySerializer yaratildi — BAJARILDI
+35. CategoryViewSet yaratildi — BAJARILDI
+36. categories/urls.py yaratildi — BAJARILDI
+37. Category API main URL'ga ulandi — BAJARILDI
+38. Category API browserda tekshirildi — BAJARILDI
+39. Category API HTTP 200 OK qaytardi — BAJARILDI
+
+40. Product API tekshirildi — BAJARILDI
+41. Product Detail API tekshirildi — BAJARILDI
+
+42. django-filter o‘rnatildi — BAJARILDI
+    Versiya: 26.1
+
+43. django-filter REST Framework'ga ulandi — BAJARILDI
+44. Product category filter qo‘shildi — BAJARILDI
+45. Category filter tekshirildi:
+    /api/products/?category=1
+    — BAJARILDI
+
+46. Product Search qo‘shildi — BAJARILDI
+47. SearchFilter sozlandi — BAJARILDI
+48. Search tekshirildi:
+    /api/products/?search=iPhone
+    — BAJARILDI
+
+49. users/serializers.py yaratildi — BAJARILDI
+50. RegisterSerializer yaratildi — BAJARILDI
+51. RegisterView yaratildi — BAJARILDI
+52. users/urls.py yaratildi — BAJARILDI
+53. Register URL main URL'ga ulandi — BAJARILDI
+54. Register API tekshirildi — BAJARILDI
+
+Register test:
+username: ismail
+email: adxamvvs@gmail.com
+
+Register natijasi:
+HTTP 201 Created
+
+55. djangorestframework-simplejwt o‘rnatildi — BAJARILDI
+    Versiya: 5.5.1
+
+56. JWT Authentication settings.py ga qo‘shildi — BAJARILDI
+57. Login URL qo‘shildi — BAJARILDI
+58. Token Refresh URL qo‘shildi — BAJARILDI
+59. Login API tekshirildi — BAJARILDI
+
+Login:
+POST /api/users/login/
+
+Natija:
+HTTP 200 OK
+
+JWT:
+- access token qaytdi
+- refresh token qaytdi
+
+==================================================
+HOZIRGI HOLAT
+==================================================
+
+OXIRGI TUGAGAN QADAM:
+
+59. Login API tekshirildi — BAJARILDI
+
+HOZIRGI KEYINGI QADAM:
+
+60. User Profile API — QILINMAGAN
+
+Keyingi qadamda users/views.py ichiga
+IsAuthenticated bilan UserProfileView qo‘shiladi.
+
+KERAKLI KOD:
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({
+            'id': request.user.id,
+            'username': request.user.username,
+            'email': request.user.email,
+        })
+
+Keyin:
+- User Profile URL yaratish
+- JWT access token bilan Profile API'ni tekshirish
+- Logout/token blacklist
+- User API
+- Permissions
+
+==================================================
+QOLGAN REJA
+==================================================
+
+USER TIZIMI:
+
+60. User Profile API — QILINMAGAN
+61. User Profile URL — QILINMAGAN
+62. JWT bilan User Profile'ni tekshirish — QILINMAGAN
+63. Logout / Token Blacklist — QILINMAGAN
+64. User API — QILINMAGAN
+65. Admin/User Permissions — QILINMAGAN
+
+CART:
+
+66. Cart model — QILINMAGAN
+67. CartItem model — QILINMAGAN
+68. Cart API — QILINMAGAN
+69. Mahsulotni savatchaga qo‘shish — QILINMAGAN
+70. Mahsulot sonini o‘zgartirish — QILINMAGAN
+71. Savatchadan mahsulotni o‘chirish — QILINMAGAN
+
+ORDER:
+
+72. Order model — QILINMAGAN
+73. OrderItem model — QILINMAGAN
+74. Buyurtma yaratish API — QILINMAGAN
+75. Buyurtmalarni ko‘rish — QILINMAGAN
+76. Buyurtma statuslari — QILINMAGAN
+
+MEDIA VA SOZLAMALAR:
+
+77. Product rasmlarini to‘g‘ri chiqarish — QILINMAGAN
+78. MEDIA_URL — QILINMAGAN
+79. MEDIA_ROOT — QILINMAGAN
+80. Static fayllar — QILINMAGAN
+81. CORS sozlash — QILINMAGAN
+
+FRONTEND:
+
+82. Frontendni Backend API bilan ulash — QILINMAGAN
+83. Productlarni frontendda chiqarish — QILINMAGAN
+84. Categorylarni frontendda chiqarish — QILINMAGAN
+85. Search — QILINMAGAN
+86. Filter — QILINMAGAN
+87. Product Detail — QILINMAGAN
+88. Cart frontend — QILINMAGAN
+89. Login/Register frontend — QILINMAGAN
+90. Checkout — QILINMAGAN
+91. Order History — QILINMAGAN
+
+YAKUNIY:
+
+92. Admin Panelni tartibga keltirish — QILINMAGAN
+93. API'larni tekshirish — QILINMAGAN
+94. Xatolarni tuzatish — QILINMAGAN
+95. Frontend + Backend to‘liq test — QILINMAGAN
+96. Productionga tayyorlash — QILINMAGAN
+
+==================================================
+MUHIM ISHLASH QOIDASI
+==================================================
+
+Har bir qadamni BITTA-BITTA qilamiz.
+
+Tartib:
+
+Men → bitta qadam beraman
+Sen → kodni yozasan
+Sen → Save qilasan
+Sen → "bo‘ldi" deysan
+Men → keyingi qadamni beraman
+
+Agar xato chiqsa:
+
+Xato → xatoni ko‘ramiz → tuzatamiz → qayta tekshiramiz → keyingi qadam.
+
+Oldingi bajarilgan qadamlarni qaytadan qilmaymiz.
+
+==================================================
+KEYINGI SAFAR
+==================================================
+
+Shu faylni menga yuborsang:
+
+"Electronics Store loyihasini davom ettiramiz."
+
+Men darhol:
+
+60-qadam — User Profile API
+
+dan davom ettiraman.
+
+Qaytadan Product, Category yoki Register qilish shart emas.
+
+==================================================
+MUHIM TEXNIK ESLATMA
+==================================================
+
+Loyihada Python 3.13.2 ishlatilmoqda.
+
+venv papkasi mavjud.
+
+Ba'zi pip paketlari hozir global Python joylashuviga o‘rnatilgan:
+
+C:\Users\support\AppData\Local\Programs\Python\Python313\Lib\site-packages
+
+Agar keyinchalik package bilan muammo chiqsa, quyidagilar bilan Python/pip qayerdan ishlayotganini tekshiramiz:
+
+where python
+python --version
+python -m pip --version
+
+==================================================
+PROJECT STRUCTURE
+==================================================
+
+electronics_store/
+│
+├── back-end/
+│   ├── manage.py
+│   │
+│   ├── config/
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   ├── asgi.py
+│   │   └── wsgi.py
+│   │
+│   ├── users/
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   │
+│   ├── products/
+│   │   ├── migrations/
+│   │   ├── admin.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   │
+│   ├── categories/
+│   │   ├── migrations/
+│   │   ├── admin.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   │
+│   ├── db.sqlite3
+│   └── venv/
+│
+└── [frontend keyin qilinadi]
+
+==================================================
+CHATGPT UCHUN ESLATMA
+==================================================
+
+Bu fayl Electronics Store loyihasining progress fayli.
+
+BAJARILDI deb yozilgan narsalarni qaytadan qilma.
+
+QILINMAGAN deb yozilgan narsalarni hali qilma.
+
+HOZIRGI JOYdan davom et.
+
+Hozirgi joy:
+
+60-qadam — User Profile API.
+
+Har safar faqat BITTA qadamni tushuntir.
+
+Foydalanuvchi "bo‘ldi" demaguncha keyingi qadamga o‘tma.
+
+Xato chiqsa, avval xatoni tuzat.
+
+```
+
+
+
+
+
+
+
+#YANGI VENV ORNATGANDAN KEYIN QAYTA YUKLANADIGAN OBYEKTLAR{
+    python -m pip install djangorestframework
+    python -m pip install django-filter
+    python -m pip install djangorestframework-simplejwt
+    python -m pip install Pillow
+    
+    Django
+
+Django REST Framework
+
+django-filter
+
+djangorestframework-simplejwt
+
+Pillow
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ BACKEND — Django REST API
+ Django project yaratish
+
+ users app yaratish
+
+ User registration API
+
+ User login API
+
+ JWT authentication
+
+ User profile API
+
+ categories app yaratish
+
+ Category model yaratish
+
+ Category serializer
+
+ Category ViewSet
+
+ Category URL / Router
+
+ Category ma'lumotlarini bazaga qo‘shish
+
+ products app yaratish
+
+ Product model yaratish
+
+ Product serializer
+
+ Product ViewSet
+
+ Product URL / Router
+
+ Product va Category bog‘lash
+
+ Product rasm upload qilish
+
+ Productlarni API orqali olish
+
+ Product yaratish API
+
+ Django check — xatosiz
+
+ Django server — ishlayapti
+
+🟢 BACKEND — Hali qilinadiganlar
+ Product search
+
+ Category filter
+
+ Price filter
+
+ Product detail endpointni frontend uchun tayyorlash
+
+ Cart model
+
+ Cart API
+
+ Order model
+
+ Order API
+
+ Order item
+
+ Buyurtma berish jarayoni
+
+ Userning o‘z orderlarini ko‘rishi
+
+ Admin orqali product/category/order boshqarish
+
+ Permissions va security'ni tartibga keltirish
+
+ CORS sozlash
+
+ Media/static sozlamalarini yakunlash
+
+🟠 FRONTEND
+Hali boshlanmagan asosiy qism.
+
+ Frontend loyihasini yaratish/tekshirish
+
+ Frontend strukturasi
+
+ Navbar
+
+ Home page
+
+ Product List
+
+ Product Card
+
+ Product rasmlarini chiqarish
+
+ Category List
+
+ Category filter
+
+ Product search
+
+ Product Detail page
+
+ Login page
+
+ Register page
+
+ JWT tokenni frontendda saqlash
+
+ User Profile
+
+ Logout
+
+ Cart page
+
+ Cartga product qo‘shish
+
+ Cartdan product o‘chirish
+
+ Quantity o‘zgartirish
+
+ Checkout page
+
+ Order yaratish
+
+ My Orders page
+
+ Responsive design
+
+ Loading holatlari
+
+ Error handling
+
+ Frontend/backend to‘liq integratsiya
+
+🔴 YAKUNIY BOSQICH
+ Barcha API'larni test qilish
+
+ Login → Product → Cart → Order flow'ni tekshirish
+
+ Rasm uploadni tekshirish
+
+ Authentication/security tekshirish
+
+ Frontend UI'ni yakunlash
+
+ Production uchun sozlash
+
+ Loyihani deploy qilish
+
+📍 Hozir qayerdamiz?
+1–23 ✅ tugagan.
+
+Hozir biz 24-band atrofidamiz, lekin katta navbat bo‘yicha keyingi asosiy ish:
+
+39. Frontend loyihasini boshlash
+
+Shuning uchun hozir backendni yana kavlamaymiz. Frontendni boshlaymiz.
+
+Keyingi ishimizni aynan:
+
+39 → Frontend loyihasini tekshirish → 40 → struktura → 41 → Navbar → 42 → Home → 43 → Product List
+
+tartibida qilamiz.
+
+
+Albatta. Men roadmapni bizning loyihamizni boshidan oxirigacha qanday qurishimizni tushunadigan tartibda tuzib beraman. Har bir bosqich tugagach belgilab boramiz.
+##############################################################
+###########################################################
+#####################################################
+###########################################
+###########################################
+##########################################
+
+🛒 Electronics Store — Development Roadmap
+1. 🧱 Backend asosini qurish
+ Django project yaratish
+
+ Virtual environment
+
+ Django REST Framework
+
+ users app
+
+ categories app
+
+ products app
+
+ Database ulash
+
+ Django serverni ishga tushirish
+
+ API structure yaratish
+
+Holat: ✅ Tugagan
+
+2. 👤 User & Authentication
+ Register API
+
+ Login API
+
+ JWT access token
+
+ JWT refresh token
+
+ Profile API
+
+ Authentication tekshirish
+
+ Login credentialsni test qilish
+
+Holat: ✅ Tugagan
+
+3. 🏷️ Categories
+ Category model
+
+ Category serializer
+
+ Category ViewSet
+
+ Category URL
+
+ Category yaratish
+
+ Categorylarni olish
+
+ Categorylarni databasega qo‘shish
+
+Holat: ✅ Tugagan
+
+Misol:
+
+Smartphones
+Laptops
+Headphones
+
+4. 📦 Products
+ Product model
+
+ Product serializer
+
+ Product ViewSet
+
+ Product URL
+
+ Product yaratish
+
+ Productlarni olish
+
+ Productni Category bilan bog‘lash
+
+ Product image
+
+ Product stock
+
+ Product price
+
+ Product description
+
+ Product API test
+
+Holat: ✅ Asosiy qismi tugagan
+
+Hozir API'da productlar mavjud.
+
+5. 🔎 Product API'ni mukammallashtirish
+Keyingi backend ishlari:
+
+ Product search
+
+ Category filter
+
+ Price filter
+
+ Stock filter
+
+ Product detail
+
+ Pagination
+
+ Ordering/sorting
+
+ API permissions
+
+Holat: 🟡 Keyin qilamiz
+
+6. 🖥️ Frontendni boshlash
+Bu bizning keyingi katta bosqichimiz.
+
+ Frontend texnologiyasini aniqlash
+
+ Frontend projectni tayyorlash
+
+ Folder structure
+
+ API service
+
+ Backend URL konfiguratsiyasi
+
+ Navbar
+
+ Footer
+
+ Home page
+
+Holat: ⏳ Hali boshlanmagan
+
+7. 🛍️ Product Frontend
+Backenddagi productlarni frontendda ko‘rsatamiz.
+
+ Product List
+
+ Product Card
+
+ Product image
+
+ Product name
+
+ Product price
+
+ Product stock
+
+ Product description
+
+ Category nomini chiqarish
+
+ Product Detail page
+
+ Search
+
+ Category filter
+
+ Price filter
+
+ Sorting
+
+ Pagination
+
+Holat: ⏳ Hali boshlanmagan
+
+8. 🔐 Frontend Authentication
+Backenddagi JWT bilan frontendni bog‘laymiz.
+
+ Register page
+
+ Login page
+
+ JWT access token
+
+ Refresh token
+
+ Tokenni saqlash
+
+ Auth state
+
+ Protected routes
+
+ Profile page
+
+ Logout
+
+ Login bo‘lmagan user uchun redirect
+
+Holat: ⏳ Hali boshlanmagan
+
+9. 🛒 Shopping Cart
+Endi haqiqiy online store funksiyasi boshlanadi.
+
+ Add to Cart
+
+ Remove from Cart
+
+ Increase quantity
+
+ Decrease quantity
+
+ Cart count
+
+ Cart total
+
+ Cart page
+
+ Empty cart
+
+ Cartni user bilan bog‘lash
+
+Holat: ⏳ Hali boshlanmagan
+
+10. 📦 Order System
+User cartdagi mahsulotlarni sotib oladi.
+
+Backend
+ Order model
+
+ OrderItem model
+
+ Order API
+
+ Order status
+
+ Total price
+
+ User bilan bog‘lash
+
+ Product bilan bog‘lash
+
+ Stockni kamaytirish
+
+Frontend
+ Checkout page
+
+ Customer information
+
+ Delivery address
+
+ Order summary
+
+ Place Order
+
+ Order success page
+
+ My Orders
+
+Holat: ⏳ Hali boshlanmagan
+
+11. 💳 Payment
+Keyinchalik payment qo‘shamiz.
+
+ Payment architecture
+
+ Payment provider tanlash
+
+ Payment API
+
+ Payment status
+
+ Successful payment
+
+ Failed payment
+
+ Order/payment bog‘lanishi
+
+Holat: ⏳ Keyin
+
+12. 👨‍💼 Admin Panel
+Admin store'ni boshqaradi.
+
+ Category management
+
+ Product management
+
+ Product image management
+
+ Stock management
+
+ Order management
+
+ User management
+
+ Order status o‘zgartirish
+
+ Admin permissions
+
+Holat: ⏳ Keyin
+
+13. 🎨 UI/UX
+Saytni professional ko‘rinishga keltiramiz.
+
+ Responsive design
+
+ Mobile version
+
+ Tablet version
+
+ Desktop version
+
+ Loading animation
+
+ Error messages
+
+ Empty states
+
+ Toast notifications
+
+ Product skeleton
+
+ 404 page
+
+ Login/Register design
+
+ Cart design
+
+ Checkout design
+
+Holat: ⏳ Keyin
+
+14. 🧪 Testing
+Hammasini tekshiramiz.
+
+ Register test
+
+ Login test
+
+ JWT test
+
+ Profile test
+
+ Category test
+
+ Product test
+
+ Search test
+
+ Filter test
+
+ Cart test
+
+ Order test
+
+ Stock test
+
+ Payment test
+
+ Frontend/API integration test
+
+Holat: ⏳ Keyin
+
+15. 🔒 Security
+Productionga chiqishdan oldin:
+
+ CORS
+
+ CSRF
+
+ JWT security
+
+ Permissions
+
+ Admin security
+
+ Environment variables
+
+ Secret keyni yashirish
+
+ DEBUG=False
+
+ Database security
+
+ File upload security
+
+Holat: ⏳ Keyin
+
+16. 🚀 Deployment
+Oxirida internetga chiqaramiz.
+
+ Production settings
+
+ Database production
+
+ Backend deploy
+
+ Frontend deploy
+
+ Media files
+
+ Static files
+
+ Domain
+
+ HTTPS
+
+ Final testing
+
+Holat: ⏳ Eng oxirida
+
+📊 Hozirgi holat
+Qism	Holat
+Django Backend	✅
+Users	✅
+JWT Login	✅
+Profile	✅
+Categories	✅
+Products	✅
+Product Images	✅
+Product Search	⏳
+Product Filter	⏳
+Frontend	⏳
+Cart	⏳
+Orders	⏳
+Payment	⏳
+Admin improvements	⏳
+UI/UX	⏳
+Testing	⏳
+Security	⏳
+Deployment	⏳
+
+🎯 Biz qayerdamiz?
+Backendning asosiy fundamenti tayyor.
+
+Keyingi safar loyihani davom ettirganimizda roadmap bo‘yicha:
+
+5-bosqich → Product API'ni mukammallashtirish
+
+yoki xohlasangiz to‘g‘ridan-to‘g‘ri:
+
+6-bosqich → Frontend
+
+dan davom etamiz.
+
+Shu roadmapni asosiy ish rejasi sifatida olib boramiz.
+
+
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+Albatta. Hozirgacha roadmap bo‘yicha hech narsani o‘zgartirmasdan, faqat hozirgi holatini belgilab chiqaman.
+
+🛒 Electronics Store — Development Roadmap
+1. 🧱 Backend asosini qurish
+Django project yaratish — ✅
+
+Virtual environment — ✅
+
+Django REST Framework — ✅
+
+users app — ✅
+
+categories app — ✅
+
+products app — ✅
+
+Database ulash — ✅
+
+Django serverni ishga tushirish — ✅
+
+API structure yaratish — ✅
+
+Holat: ✅ Tugagan
+
+2. 👤 User & Authentication
+Register API — ✅
+
+Login API — ✅
+
+JWT access token — ✅
+
+JWT refresh token — ✅
+
+Profile API — ✅
+
+Authentication tekshirish — ✅
+
+Login credentialsni test qilish — ✅
+
+Holat: ✅ Tugagan
+
+3. 🏷️ Categories
+Category model — ✅
+
+Category serializer — ✅
+
+Category ViewSet — ✅
+
+Category URL — ✅
+
+Category yaratish — ✅
+
+Categorylarni olish — ✅
+
+Categorylarni databasega qo‘shish — ✅
+
+Holat: ✅ Tugagan
+
+Misol:
+
+Smartphones
+
+Laptops
+
+Headphones
+
+4. 📦 Products
+Product model — ✅
+
+Product serializer — ✅
+
+Product ViewSet — ✅
+
+Product URL — ✅
+
+Product yaratish — ✅
+
+Productlarni olish — ✅
+
+Productni Category bilan bog‘lash — ✅
+
+Product image — ✅
+
+Product stock — ✅
+
+Product price — ✅
+
+Product description — ✅
+
+Product API test — ✅
+
+Holat: ✅ Asosiy qismi tugagan
+
+Hozir API'da productlar mavjud.
+
+5. 🔎 Product API'ni mukammallashtirish
+Product search — ✅
+
+Category filter — ✅
+
+Price filter — ✅
+
+Stock filter — ✅
+
+Product detail — ✅
+
+Pagination — ✅
+
+Ordering/sorting — ✅
+
+API permissions — ⏳
+
+Holat: 🟡 Deyarli tugagan
+
+Faqat API permissions hali qilinmagan.
+
+6. 🖥️ Frontendni boshlash
+Frontend texnologiyasini aniqlash — ⏳
+
+Frontend projectni tayyorlash — ⏳
+
+Folder structure — ⏳
+
+API service — ⏳
+
+Backend URL konfiguratsiyasi — ⏳
+
+Navbar — ⏳
+
+Footer — ⏳
+
+Home page — ⏳
+
+Holat: ⏳ Hali boshlanmagan
+
+7. 🛍️ Product Frontend
+Product List — ⏳
+
+Product Card — ⏳
+
+Product image — ⏳
+
+Product name — ⏳
+
+Product price — ⏳
+
+Product stock — ⏳
+
+Product description — ⏳
+
+Category nomini chiqarish — ⏳
+
+Product Detail page — ⏳
+
+Search — ⏳
+
+Category filter — ⏳
+
+Price filter — ⏳
+
+Sorting — ⏳
+
+Pagination — ⏳
+
+Holat: ⏳ Hali boshlanmagan
+
+8. 🔐 Frontend Authentication
+Register page — ⏳
+
+Login page — ⏳
+
+JWT access token — ⏳
+
+Refresh token — ⏳
+
+Tokenni saqlash — ⏳
+
+Auth state — ⏳
+
+Protected routes — ⏳
+
+Profile page — ⏳
+
+Logout — ⏳
+
+Login bo‘lmagan user uchun redirect — ⏳
+
+Holat: ⏳ Hali boshlanmagan
+
+9. 🛒 Shopping Cart
+Add to Cart — ⏳
+
+Remove from Cart — ⏳
+
+Increase quantity — ⏳
+
+Decrease quantity — ⏳
+
+Cart count — ⏳
+
+Cart total — ⏳
+
+Cart page — ⏳
+
+Empty cart — ⏳
+
+Cartni user bilan bog‘lash — ⏳
+
+Holat: ⏳ Hali boshlanmagan
+
+10. 📦 Order System
+Backend
+Order model — ⏳
+
+OrderItem model — ⏳
+
+Order API — ⏳
+
+Order status — ⏳
+
+Total price — ⏳
+
+User bilan bog‘lash — ⏳
+
+Product bilan bog‘lash — ⏳
+
+Stockni kamaytirish — ⏳
+
+Frontend
+Checkout page — ⏳
+
+Customer information — ⏳
+
+Delivery address — ⏳
+
+Order summary — ⏳
+
+Place Order — ⏳
+
+Order success page — ⏳
+
+My Orders — ⏳
+
+Holat: ⏳ Hali boshlanmagan
+
+11. 💳 Payment
+Payment architecture — ⏳
+
+Payment provider tanlash — ⏳
+
+Payment API — ⏳
+
+Payment status — ⏳
+
+Successful payment — ⏳
+
+Failed payment — ⏳
+
+Order/payment bog‘lanishi — ⏳
+
+Holat: ⏳ Keyin
+
+12. 👨‍💼 Admin Panel
+Category management — ⏳
+
+Product management — ⏳
+
+Product image management — ⏳
+
+Stock management — ⏳
+
+Order management — ⏳
+
+User management — ⏳
+
+Order status o‘zgartirish — ⏳
+
+Admin permissions — ⏳
+
+Holat: ⏳ Keyin
+
+13. 🎨 UI/UX
+Responsive design — ⏳
+
+Mobile version — ⏳
+
+Tablet version — ⏳
+
+Desktop version — ⏳
+
+Loading animation — ⏳
+
+Error messages — ⏳
+
+Empty states — ⏳
+
+Toast notifications — ⏳
+
+Product skeleton — ⏳
+
+404 page — ⏳
+
+Login/Register design — ⏳
+
+Cart design — ⏳
+
+Checkout design — ⏳
+
+Holat: ⏳ Keyin
+
+14. 🧪 Testing
+Register test — ⏳
+
+Login test — ⏳
+
+JWT test — ⏳
+
+Profile test — ⏳
+
+Category test — ⏳
+
+Product test — ⏳
+
+Search test — ⏳
+
+Filter test — ⏳
+
+Cart test — ⏳
+
+Order test — ⏳
+
+Stock test — ⏳
+
+Payment test — ⏳
+
+Frontend/API integration test — ⏳
+
+Holat: ⏳ Keyin
+
+15. 🔒 Security
+CORS — ⏳
+
+CSRF — ⏳
+
+JWT security — ⏳
+
+Permissions — ⏳
+
+Admin security — ⏳
+
+Environment variables — ⏳
+
+Secret keyni yashirish — ⏳
+
+DEBUG=False — ⏳
+
+Database security — ⏳
+
+File upload security — ⏳
+
+Holat: ⏳ Keyin
+
+16. 🚀 Deployment
+Production settings — ⏳
+
+Database production — ⏳
+
+Backend deploy — ⏳
+
+Frontend deploy — ⏳
+
+Media files — ⏳
+
+Static files — ⏳
+
+Domain — ⏳
+
+HTTPS — ⏳
+
+Final testing — ⏳
+
+Holat: ⏳ Eng oxirida
+
+📊 Hozirgi umumiy holat
+Qism	Holat
+Django Backend	✅
+Users	✅
+JWT Login	✅
+Profile	✅
+Categories	✅
+Products	✅
+Product Images	✅
+Product Search	✅
+Product Filter	✅
+Product Pagination	✅
+Product Sorting	✅
+API Permissions	⏳
+Frontend	⏳
+Cart	⏳
+Orders	⏳
+Payment	⏳
+Admin improvements	⏳
+UI/UX	⏳
+Testing	⏳
+Security	⏳
+Deployment	⏳
+
+🎯 Hozirgi nuqtamiz
+Backend asosiy qismi: ✅ tayyor
+
+5-bosqich: 🟡 deyarli tugagan — faqat API permissions qolgan.
+
+Keyingi katta bosqich: 6-bosqich → Frontend 🚀
+
+
+
+#################################################################
+#################################################################
+#################################################################
+#################################################################
+#################################################################
+#################################################################
+#################################################################
+#################################################################
+#################################################################
+
+
+
+Albatta. Keyingi safar shu joydan adashmasdan davom etishimiz uchun roadmapni **aniq davom ettirish nuqtasi bilan** tayyorlab qo‘yamiz.
+
+ Electronics Store — Davom Etish Roadmap
+
+# 🛒 Electronics Store — Davom Etish Roadmap
+
+ ## ✅ Tugagan bosqichlar
+
+ ### 1\. 🧱 Backend asosini qurish
+
+ - Django project
+- Virtual environment
+- Django REST Framework
+- users app
+- categories app
+- products app
+- Database
+- Django server
+- API structure
+
+ **Holat: ✅ Tugagan**
+
+ ### 2\. 👤 User & Authentication
+
+ - Register API
+- Login API
+- JWT access token
+- JWT refresh token
+- Profile API
+- Authentication
+- Login credentials test
+
+ **Holat: ✅ Tugagan**
+
+ ### 3\. 🏷️ Categories
+
+ - Category model
+- Serializer
+- ViewSet
+- URL
+- Category yaratish
+- Categorylarni olish
+- Databasega qo‘shish
+
+ **Holat: ✅ Tugagan**
+
+ ### 4\. 📦 Products
+
+ - Product model
+- Serializer
+- ViewSet
+- URL
+- Product yaratish
+- Productlarni olish
+- Category bilan bog‘lash
+- Product image
+- Stock
+- Price
+- Description
+- API test
+
+ **Holat: ✅ Asosiy qismi tugagan**
+
+---
+
+ # ✅ 5-bosqich — Product API'ni mukammallashtirish
+
+ Quyidagilar bajarildi:
+
+ - ✅ Product search
+- ✅ Category filter
+- ✅ Price filter
+- ✅ Stock filter
+- ✅ Product detail
+- ✅ Pagination
+- ✅ Ordering / sorting
+- ✅ Product API test
+
+ Misollar:
+
+```
+/api/products/products/?search=Iphone
+/api/products/products/?category=1
+/api/products/products/?min_price=1300
+/api/products/products/?max_price=1300
+/api/products/products/?stock=10
+/api/products/products/1/
+/api/products/products/?page=2
+/api/products/products/?ordering=price
+```
+
+ **Holat: ✅ Tugagan**
+
+---
+
+ # 🟡 SHU JOYIDAN BOSHLAYMIZ
+
+ ## 6-bosqich → 🖥️ Frontendni boshlash
+
+ **Keyingi safar aynan 6-bosqichdan boshlaymiz.**
+
+ ### 6.1 Frontend texnologiyasini aniqlash
+
+ - Frontend framework tanlash
+- Project yaratish
+
+ ### 6.2 Frontend projectni tayyorlash
+
+ - Folder structure
+- Components
+- Pages
+- API service
+- Backend URL konfiguratsiyasi
+
+ ### 6.3 Asosiy sahifalar
+
+ - Navbar
+- Footer
+- Home page
+
+ **Holat: ⏳ Boshlanmagan**
+
+---
+
+ # ⏳ Keyingi bosqichlar
+
+ ### 7\. 🛍️ Product Frontend
+
+ - Product List
+- Product Card
+- Product image
+- Product name
+- Product price
+- Product stock
+- Product description
+- Category
+- Product Detail
+- Search
+- Category filter
+- Price filter
+- Sorting
+- Pagination
+
+ **Holat: ⏳**
+
+ ### 8\. 🔐 Frontend Authentication
+
+ - Register
+- Login
+- JWT
+- Access token
+- Refresh token
+- Auth state
+- Protected routes
+- Profile
+- Logout
+- Redirect
+
+ **Holat: ⏳**
+
+ ### 9\. 🛒 Shopping Cart
+
+ - Add to Cart
+- Remove
+- Increase quantity
+- Decrease quantity
+- Cart count
+- Cart total
+- Cart page
+- Empty cart
+- User bilan bog‘lash
+
+ **Holat: ⏳**
+
+ ### 10\. 📦 Order System
+
+ **Backend:**
+
+ - Order model
+- OrderItem model
+- Order API
+- Order status
+- Total price
+- User bilan bog‘lash
+- Product bilan bog‘lash
+- Stockni kamaytirish
+
+ **Frontend:**
+
+ - Checkout
+- Customer information
+- Delivery address
+- Order summary
+- Place Order
+- Order success
+- My Orders
+
+ **Holat: ⏳**
+
+ ### 11\. 💳 Payment
+
+ - Payment architecture
+- Payment provider
+- Payment API
+- Payment status
+- Successful payment
+- Failed payment
+- Order/payment bog‘lanishi
+
+ **Holat: ⏳**
+
+ ### 12\. 👨‍💼 Admin Panel
+
+ - Category management
+- Product management
+- Image management
+- Stock management
+- Order management
+- User management
+- Order status
+- Admin permissions
+
+ **Holat: ⏳**
+
+ ### 13\. 🎨 UI/UX
+
+ - Responsive design
+- Mobile
+- Tablet
+- Desktop
+- Loading
+- Error messages
+- Empty states
+- Toast notifications
+- Skeleton
+- 404
+- Login/Register design
+- Cart design
+- Checkout design
+
+ **Holat: ⏳**
+
+ ### 14\. 🧪 Testing
+
+ - Register
+- Login
+- JWT
+- Profile
+- Category
+- Product
+- Search
+- Filter
+- Cart
+- Order
+- Stock
+- Payment
+- Frontend/API integration
+
+ **Holat: ⏳**
+
+ ### 15\. 🔒 Security
+
+ - CORS
+- CSRF
+- JWT security
+- Permissions
+- Admin security
+- Environment variables
+- Secret key
+- DEBUG=False
+- Database security
+- File upload security
+
+ **Holat: ⏳**
+
+ ### 16\. 🚀 Deployment
+
+ - Production settings
+- Production database
+- Backend deploy
+- Frontend deploy
+- Media files
+- Static files
+- Domain
+- HTTPS
+- Final testing
+
+ **Holat: ⏳**
+
+---
+
+ # 🎯 KEYINGI SAFAR UCHUN BOSHLANG‘ICH NUQTA
+
+ > **🟢 5-bosqich tugagan.**
+>
+>  **➡️ Keyingi safar 6-bosqichdan boshlaymiz: Frontendni boshlash.**
+>
+>  Birinchi qiladigan ishimiz:
+>
+>  **6.1 — Frontend texnologiyasini tanlash va frontend projectni yaratish.**
+
+ **Backend hozircha tayyor. Frontendga o‘tamiz.**
+ ################################################################
+ ################################################################
+ ################################################################
+ ################################################################
+ ################################################################
+ va################################################################
+ ################################################################
+ ################################################################
+ ################################################################
+################################################################
+################################################################
+################################################################
+
+Albatta. Biz hozirgacha qilgan ishlarni boshidan oxirigacha bitta tartibli roadmap qilib beraman. Qayerlari tugaganini va qayerda to‘xtaganimizni ham belgilayman.
+
+Electronics Store — Roadmap
+🟢 1. Backend — Django
+✅ Django project yaratildi
+
+✅ back-end papkasi tayyor
+
+✅ Virtual environment (venv) ishlatildi
+
+✅ Django server ishga tushirildi
+
+✅ SQLite database ishlayapti
+
+✅ users app yaratilgan
+
+✅ products app yaratilgan
+
+✅ categories app yaratilgan
+
+✅ Django REST Framework o‘rnatilgan
+
+✅ Product API yaratildi
+
+✅ Category API yaratildi
+
+✅ User API mavjud
+
+✅ Product CRUD endpointlari ishlayapti
+
+✅ Pagination/filter sozlamalari mavjud
+
+✅ CORS sozlandi
+
+✅ Media/image sozlamalari qilindi
+
+✅ Django Admin ishlayapti
+
+✅ Admin orqali product qo‘shish ishlayapti
+
+✅ Admin orqali category qo‘shish ishlayapti
+
+✅ Product rasmlari media/products/ga saqlanyapti
+
+Backend API
+/api/users/
+/api/products/
+/api/products/products/
+/api/products/products/<id>/
+/api/categories/
+
+Backend asosiy qismi hozircha tayyor. ✅
+
+🟢 2. Frontend — React/Vite
+2.1. Frontend project
+✅ Vite + React yaratildi
+
+✅ front-end papkasi yaratildi
+
+✅ npm install bajarildi
+
+✅ axios o‘rnatildi
+
+✅ react-router-dom o‘rnatildi
+
+✅ Frontend server ishlayapti
+
+2.2. Frontend folder structure
+Biz yaratdik:
+
+src/
+├── components/
+├── pages/
+├── services/
+├── layouts/
+├── hooks/
+└── context/
+
+🟢 3. API bilan ulash
+✅ Axios sozlandi
+
+✅ productService.js yaratildi
+
+✅ Django Product API React'ga ulandi
+
+✅ CORS muammosi hal qilindi
+
+✅ Product list frontendda chiqdi
+
+✅ Django database → API → React ishlayapti
+
+Ya'ni:
+
+Django Database
+      ↓
+Django REST API
+      ↓
+Axios
+      ↓
+React
+
+🟢 4. Home Page
+✅ Home.jsx
+
+✅ Productlarni API'dan olish
+
+✅ Loading holati
+
+✅ Error holati
+
+✅ Product list
+
+✅ Product Card bilan ulash
+
+🟢 5. Product Card
+✅ ProductCard.jsx
+
+✅ Product image
+
+✅ Product name
+
+✅ Price
+
+✅ Stock
+
+✅ View Details button
+
+✅ CSS dizayn
+
+✅ Responsive grid
+
+🟢 6. Product Detail
+✅ ProductDetail.jsx
+
+✅ URL orqali product ID olish
+
+✅ /products/:id
+
+✅ Django'dan bitta product olish
+
+✅ Product image
+
+✅ Name
+
+✅ Price
+
+✅ Description
+
+✅ Stock
+
+Masalan:
+
+/products/1
+
+ishlayapti. ✅
+
+🟢 7. Image / Media
+Bu yerda muammo bo‘lgan edi, lekin hal qildik:
+
+✅ MEDIA_URL
+
+✅ MEDIA_ROOT
+
+✅ Django static() media serving
+
+✅ media/products/
+
+✅ Product image upload
+
+✅ Frontendda product rasmi chiqishi
+
+🟢 8. Ko‘proq Products
+Admin orqali bir nechta mahsulot qo‘shdik:
+
+✅ iPhone 15 Pro Max
+
+✅ iPhone 18 Pro Max
+
+✅ Samsung S24 Ultra
+
+✅ Samsung S25 Ultra
+
+✅ Samsung S26 Ultra
+
+✅ MacBook M2 Air
+
+✅ boshqa mahsulotlar
+
+Shuningdek:
+
+✅ Smartphones
+
+✅ Laptops
+
+✅ Headphones
+
+kategoriyalari yaratildi.
+
+🟢 9. Products Page
+✅ Products.jsx
+
+✅ Barcha productlarni API'dan olish
+
+✅ ProductCard ishlatish
+
+✅ /products route
+
+🟢 10. Categories Page
+✅ Categories.jsx
+
+✅ Category API'dan ma'lumot olish
+
+✅ /categories route
+
+✅ Categories frontendda ko‘rinadi
+
+🟢 11. Navbar
+Navbar yaratildi:
+
+Home
+Products
+Categories
+Login
+Register
+Cart
+
+✅ React Router Link
+
+✅ Navigation ishlayapti
+
+🟢 12. Login
+✅ Login.jsx
+
+✅ Email input
+
+✅ Password input
+
+✅ Login button
+
+✅ /login route
+
+⚠️ Muhim: hozircha bu faqat frontend forma. Django authentication bilan hali ulanmagan.
+
+🟢 13. Register
+✅ Register.jsx
+
+✅ Username
+
+✅ Email
+
+✅ Password
+
+✅ Confirm Password
+
+✅ Password matching
+
+✅ /register route
+
+⚠️ Hali Django User API bilan ulanmagan.
+
+🟢 14. Cart
+✅ Cart.jsx
+
+✅ /cart route
+
+✅ Empty cart holati
+
+✅ Remove funksiyasi tayyorlangan
+
+Lekin:
+
+⚠️ Cart hali haqiqiy ishlamayapti.
+
+Hozir:
+
+Your cart is empty.
+
+ko‘rsatadi.
+
+🔴 15. QAYERDA TO‘XTADIK?
+Aynan shu yerda to‘xtadik.
+
+Keyingi qiladigan ish:
+
+🛒 Real Shopping Cart
+Buni qilamiz:
+
+Product
+   ↓
+Add to Cart
+   ↓
+Cart
+   ↓
+Quantity + / -
+   ↓
+Remove
+   ↓
+Total price
+   ↓
+Checkout
+
+Masalan:
+
+Shopping Cart
+
+iPhone 18 Pro Max
+$1500
+Quantity: [-] 1 [+]
+
+Samsung S25 Ultra
+$1300
+Quantity: [-] 2 [+]
+
+------------------
+Total: $4100
+
+[Checkout]
+
+🔴 16. Keyingi bosqichlar
+Cart'dan keyin roadmap:
+
+🔴 Add to Cart
+
+🔴 Cart Context / State Management
+
+🔴 Quantity increase/decrease
+
+🔴 Remove from Cart
+
+🔴 Total price
+
+🔴 Cart counter
+
+🔴 LocalStorage
+
+🔴 Checkout page
+
+🔴 Order creation
+
+🔴 Django Order API
+
+🔴 User authentication
+
+🔴 Real Login
+
+🔴 Real Register
+
+🔴 JWT authentication
+
+🔴 Logout
+
+🔴 User profile
+
+🔴 Search
+
+🔴 Category filter
+
+🔴 Price filter
+
+🔴 Sorting
+
+🔴 Pagination
+
+🔴 Product detail improvements
+
+🔴 About page
+
+🔴 Contact page
+
+🔴 Footer
+
+🔴 Responsive mobile design
+
+🔴 Loading/error UI
+
+🔴 Toast notifications
+
+🔴 Admin improvements
+
+🔴 Final testing
+
+🔴 Production build
+
+🔴 Deployment
+
+📍 Bizning hozirgi joyimiz
+BACKEND
+████████████████████  ~100% asosiy qism
+
+FRONTEND
+████████████░░░░░░░░  ~60%
+
+                  ↓
+
+       🛑 HOZIR SHU YERDAMIZ
+
+        🛒 REAL CART
+
+Eng keyingi vazifa:
+Add to Cart funksiyasini yaratish.
+
+Ya'ni mahsulotdagi View Details yoniga Add to Cart tugmasini qo‘shib, bosilganda mahsulotni Cart'ga tushiramiz.
+###########
+#
+#
+#
+#
+#
+#
+Products: /api/products/products/
+
+Product detail: /api/products/products/:id/
+
+Register: /api/users/register/
+
+Login: /api/users/login/
+
+Refresh: /api/users/token/refresh/
+
+Profile: /api/users/profile/
+@
+@
+@
+@
+@
+@
+@
+@
+@
+@
+Albatta. Hozirgi holatni aniq checkpoint qilib olamiz, shunda keyin qaytganimizda qayerdan davom etishni bilamiz.
+
+🗺️ Electronics Store — Roadmap
+🟢 1. Backend — bajarilgan
+Django backendning asosiy qismi tayyor.
+
+ Django backend yaratildi
+
+ Django REST Framework ishlayapti
+
+ Product model/API ishlayapti
+
+ Product list API ishlayapti
+
+ Product detail API ishlayapti
+
+ 6 ta product bazada bor
+
+ Pagination ishlayapti
+
+ /api/products/products/ → HTTP 200
+
+ Register API
+
+ JWT Login API
+
+ Token refresh API
+
+ Profile API
+
+ Django User authentication
+
+ Password tekshirish ishlayapti
+
+ Profile'da login qilgan user chiqyapti
+
+Backend API'larimiz
+GET  /api/products/products/
+GET  /api/products/products/:id/
+
+POST /api/users/register/
+POST /api/users/login/
+POST /api/users/token/refresh/
+GET  /api/users/profile/
+
+Backendga hozircha tegmaymiz. ✅
+
+🟢 2. Eski Frontend — bajarilgan edi
+Eski frontendda quyidagilar ishlagan:
+
+ Home
+
+ Navbar
+
+ Products
+
+ Product Detail
+
+ Categories
+
+ Login
+
+ Register
+
+ Profile
+
+ JWT login
+
+ Logout
+
+ CartContext
+
+ Cart navbar
+
+ Add to Cart boshlang‘ich funksiyasi
+
+Lekin keyinchalik frontendda bir nechta fayllarni o‘zgartirib yubordik va loyiha chalkashib ketdi.
+
+Shuning uchun:
+
+Eski frontendni o‘chirib tashladik. ✅
+
+🟢 3. Yangi Frontend — hozirgi holat
+Biz yangi frontendni noldan yaratishni boshladik.
+
+Bajarilgan:
+
+ Eski front-end papkasi o‘chirildi
+
+ Yangi Vite + React loyiha yaratildi
+
+ npm install qilindi
+
+ axios o‘rnatildi
+
+ react-router-dom o‘rnatildi
+
+Hozirgi holat:
+
+electronics_store/
+├── back-end/     ✅
+└── front-end/    🟢 YANGI
+
+🔴 4. Frontend — hali qilinmagan
+Endi asosiy ish shu.
+
+Bosqich 1 — Frontend structure
+ src/components
+
+ src/pages
+
+ src/services
+
+ src/context
+
+ src/hooks
+
+ api.js
+
+ routing
+
+ CSS
+
+Bosqich 2 — Products
+ Product API ulash
+
+ Product list
+
+ ProductCard
+
+ Product image
+
+ Product price
+
+ Product stock
+
+ Pagination
+
+Bosqich 3 — Product Detail
+ /products/:id
+
+ Mahsulot rasmi
+
+ Nomi
+
+ Narxi
+
+ Description
+
+ Stock
+
+ Add to Cart
+
+Bosqich 4 — Cart
+ CartContext
+
+ Add to Cart
+
+ Remove
+
+ Increase quantity
+
+ Decrease quantity
+
+ Total price
+
+ Cart count
+
+ localStorage
+
+Bosqich 5 — Authentication
+ Register page
+
+ Login page
+
+ JWT access token
+
+ Refresh token
+
+ Tokenni localStorage'da saqlash
+
+ Axios interceptor
+
+ Logout
+
+Bosqich 6 — Profile
+ Profile API
+
+ Username
+
+ Email
+
+ User ID
+
+ Login qilmagan user uchun himoya
+
+Bosqich 7 — Navbar
+ Home
+
+ Products
+
+ Categories
+
+ Cart
+
+ Login/Register
+
+ Profile
+
+ Logout
+
+ Cart count
+
+Bosqich 8 — UI
+ Chiroyli ProductCard
+
+ Responsive layout
+
+ Navbar dizayni
+
+ Cart dizayni
+
+ Login/Register dizayni
+
+ Loading
+
+ Error messages
+
+ Empty states
+
+Bosqich 9 — Yakuniy test
+ Register
+
+ Login
+
+ Profile
+
+ Logout
+
+ Products
+
+ Product detail
+
+ Add Cart
+
+ Quantity
+
+ Remove
+
+ Cart total
+
+ Pagination
+
+ Refresh
+
+ Backend bilan to‘liq integratsiya
+
+📍 HOZIRGI CHECKPOINT
+Biz aynan shu joyda to‘xtadik:
+
+Backend                  ✅ TAYYOR
+
+Eski frontend             ❌ O‘CHIRILDI
+
+Yangi Vite frontend       ✅ YARATILDI
+
+npm install               ✅
+
+axios                     ✅
+
+react-router-dom          ✅
+
+Frontend kodlari          ⏳ HALI BOSHLANMAGAN
+
+Keyingi qiladigan ishimiz:
+1. src papkasini tartibga keltirish
+        ↓
+2. api.js
+        ↓
+3. App.jsx + Router
+        ↓
+4. Navbar
+        ↓
+5. Products API
+        ↓
+6. ProductCard
+        ↓
+7. Product Detail
+        ↓
+8. Cart
+        ↓
+9. Login/Register
+        ↓
+10. Profile/Logout
+        ↓
+11. UI
+        ↓
+12. Final test
+
+Demak, tanaffusdan keyin aynan 1. src papkasini tartibga keltirishdan boshlaymiz. Shu roadmapni checkpoint sifatida olib ketamiz.
+
+
+
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@
+@
+@
+@
+@
+@
+@
+2
+@
+@
+@
+@
+@
+@
+@
+@
+@
+@
+@
+@
+@
+@
+@
+
+Albatta. Hozirgacha qilgan ishlarimizni aniq checkpoint/roadmap qilib qo‘yamiz. Frontendni hozircha umuman hisobga olmaymiz — asosiy yo‘nalishimiz Django REST API + CRUD + Authentication + Permissions.
+
+🗺️ Electronics Store — Backend/API Roadmap
+🟢 1. Django Backend — TAYYOR
+✅ Django project yaratildi
+✅ Django REST Framework o‘rnatildi
+✅ products app yaratildi
+✅ users app yaratildi
+✅ Database ishlayapti
+✅ Product model yaratildi
+✅ 6 ta product bazaga qo‘shildi
+🟢 2. Product API — TAYYOR
+GET
+✅ Product list
+✅ Product detail
+✅ Pagination
+✅ Search
+✅ Filter
+✅ Ordering
+✅ /api/products/products/
+✅ /api/products/products/:id/
+POST
+✅ Yangi product yaratish
+✅ POST requestni Postman orqali tekshirdik
+✅ Product database'ga saqlanishini tekshirdik
+PATCH
+✅ Product update
+✅ priceni o‘zgartirdik
+✅ PATCH → 200 OK
+✅ Keyin GET orqali database'da o‘zgarganini tasdiqladik
+Masalan:
+
+1500.00
+   ↓
+1400.00
+DELETE
+✅ Product delete
+✅ DELETE requestni tekshirdik
+🟢 3. Quantity / Stock — TEKSHIRILGAN
+✅ stock field
+✅ Quantity/stock bilan ishlash
+✅ Product quantity'ni tekshirdik
+✅ CRUD jarayonida stock fieldni ko‘rdik
+🟢 4. Authentication — TAYYOR
+Register
+✅ Register API
+✅ User yaratish
+✅ Password tekshirish
+Login
+✅ JWT Login
+✅ Access token
+✅ Refresh token
+✅ Loginni Postman orqali tekshirish
+Token Refresh
+✅ Refresh token API
+Profile
+✅ Profile API
+✅ Login qilgan userni olish
+✅ Username
+✅ User ma'lumotlari
+🟢 5. Permissions — TEKSHIRILGAN
+Biz juda yaxshi amaliy test qildik. 😄
+
+Oddiy user
+✅ GET → ishlaydi
+✅ PATCH → 403 Forbidden
+✅ Sababini topdik
+Admin / Staff
+permissions.py:
+
+class IsAdminOrReadOnly(BasePermission):
+✅ SAFE_METHODS tushunildi
+✅ Oddiy user faqat GET/HEAD/OPTIONS
+✅ is_staff=True bo‘lsa yozish mumkin
+✅ Admin bilan PATCH ishlatildi
+Bizda muammo bo‘lgan:
+
+user.is_staff
+False edi.
+
+Uni:
+
+user.is_staff = True
+user.save()
+qilib, keyin PATCHni muvaffaqiyatli bajardik.
+
+🟢 6. Serializer — BOSHLANDI
+Hozir aynan shu qismdamiz.
+
+Bizning:
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+kodimizni ko‘rib chiqdik.
+
+Tushundik:
+
+✅ serializers nima
+✅ ModelSerializer nima
+✅ Meta nima
+✅ model = Product
+✅ fields = '__all__'
+✅ Serializer Model ↔ JSON o‘rtasidagi ko‘prik
+✅ GETda Serializer ishlashi
+✅ POSTda Serializer ishlashi
+✅ PATCHda Serializer ishlashi
+🟡 7. ViewSet — HOZIRGI KEYINGI BOSQICH
+Bizda:
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminOrReadOnly]
+bor.
+
+Lekin hali chuqur tushuntirib chiqmadik.
+
+Keyingi dars:
+
+⏳ ModelViewSet nima?
+⏳ queryset nima?
+⏳ serializer_class nima?
+⏳ permission_classes nima?
+⏳ ModelViewSet qanday qilib GET/POST/PATCH/DELETE beradi?
+⏳ list()
+⏳ retrieve()
+⏳ create()
+⏳ partial_update()
+⏳ destroy()
+🟡 8. Router / URLs — HALI CHUQUR KO‘RILMAGAN
+Keyin:
+
+⏳ router.register()
+⏳ urls.py
+⏳ ViewSet → URL bog‘lanishi
+⏳ /api/products/products/
+⏳ /api/products/products/<id>/
+⏳ Router qanday qilib URL yaratadi
+🟡 9. Validation — HALI CHUQUR KO‘RILMAGAN
+Keyingi bosqichlardan biri:
+
+⏳ Serializer validation
+⏳ Required fields
+⏳ read_only
+⏳ write_only
+⏳ validate_<field>()
+⏳ validate()
+⏳ Price validation
+⏳ Stock validation
+⏳ Xato response'larini tushunish
+Masalan:
+
+{
+    "price": ["This field is required."]
+}
+kabi xatolarni chuqurroq tushunamiz.
+
+🟡 10. Authentication'ni chuqurroq tushunish
+Hozir ishlatyapmiz, lekin ichki ishlashini hali to‘liq o‘rganmadik:
+
+⏳ JWT qanday ishlaydi?
+⏳ Access token
+⏳ Refresh token
+⏳ Token expiration
+⏳ request.user
+⏳ Authentication va Authorization farqi
+⏳ IsAuthenticated
+⏳ IsAdminUser
+🟡 11. Product API'ni yaxshilash
+Keyinchalik:
+
+⏳ Product ownership
+⏳ User faqat o‘z productlarini o‘zgartirishi kerakmi?
+⏳ Admin permissions
+⏳ Custom permissions
+⏳ Category API
+⏳ Category filter
+⏳ Product search
+⏳ Advanced filtering
+⏳ Ordering
+⏳ Paginationni chuqurroq sozlash
+🔴 12. Frontend — KEYINROQ
+Frontendni hozir tegmaymiz.
+
+Keyin:
+
+⏳ Vite + React
+⏳ src structure
+⏳ Axios
+⏳ Router
+⏳ Product list
+⏳ Product detail
+⏳ Cart
+⏳ Login/Register
+⏳ JWT integration
+⏳ Profile
+⏳ UI
+⏳ Backend bilan to‘liq integratsiya
+📍 HOZIRGI CHECKPOINT
+Eng muhim joy:
+
+Backend
+   ↓
+Model                    ✅
+   ↓
+Serializer               ✅ TUSHUNDIK
+   ↓
+ViewSet                  🟡 HOZIR SHU YERDAMIZ
+   ↓
+Router / URLs            ⏳
+   ↓
+Permissions              ✅
+   ↓
+Authentication           ✅
+   ↓
+GET / POST / PATCH       ✅
+DELETE                   ✅
+   ↓
+Validation               ⏳
+   ↓
+Advanced API             ⏳
+   ↓
+Frontend                 ⏳ KEYIN
+🎯 Keyingi darsimiz
+ProductViewSetni qatorma-qator o‘rganamiz.
+
+Ayniqsa mana shu uchta qatorni:
+
+queryset = Product.objects.all()
+serializer_class = ProductSerializer
+permission_classes = [IsAdminOrReadOnly]
+va keyin ModelViewSetning o‘zi qanday qilib GET, POST, PATCH, DELETE'ni avtomatik berayotganini ko‘ramiz.
+
+Shu checkpointdan davom etamiz.
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+Electronics Store — Django REST API
+Backend dars konspekti va checkpoint
+
+Loyiha: Electronics Store
+Texnologiyalar: Python, Django, Django REST Framework, JWT, Postman
+Hozirgi bosqich: ProductViewSet
+Asosiy maqsad: Backend, CRUD, Authentication, Permissions va API ishlashini chuqur tushunish.
+
+1. Loyiha holati — Checkpoint
+Bajarilgan ishlar
+Django project yaratildi.
+Django REST Framework o‘rnatildi.
+products va users applari yaratildi.
+Database ishlayapti.
+Product modeli yaratildi.
+Database'ga 6 ta product qo‘shildi.
+Product CRUD amallari Postman orqali tekshirildi.
+Search, filter, ordering va pagination sozlandi.
+Register va JWT login ishlaydi.
+Access token va refresh token tekshirildi.
+Profile API ishlaydi.
+Permissions oddiy user va staff user bilan tekshirildi.
+ProductSerializer asoslari o‘rganildi.
+Hozirgi holat
+
+ProductViewSet mavzusini o‘rganishni boshladik.
+
+2. Model nima?
+
+Model — database'dagi ma'lumotlar tuzilishini Python klassi orqali belgilaydi.
+
+Masalan, Product modeli electronics mahsulotlari haqidagi ma'lumotlarni ifodalaydi.
+
+class Product(models.Model):
+    name = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
+
+
+Bu misolda:
+
+name — mahsulot nomi.
+price — mahsulot narxi.
+stock — ombordagi miqdor.
+
+Eslatma: Bu o‘quv misoli. Loyihadagi haqiqiy model qo‘shimcha maydonlarga ega bo‘lishi mumkin.
+
+3. Serializer nima?
+
+Serializer — Django modelidagi ma'lumotlarni JSON ko‘rinishiga o‘tkazish va kelgan ma'lumotlarni tekshirish uchun ishlatiladi.
+
+Bizning serializer:
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+Kodning ma'nosi
+ModelSerializer
+
+Django REST Framework tomonidan berilgan tayyor serializer klassi.
+
+Model maydonlari asosida ko‘p ishlarni avtomatik bajaradi.
+
+class Meta
+
+Serializer uchun sozlamalarni saqlaydi.
+
+model = Product
+
+Ushbu serializer qaysi model bilan ishlashini belgilaydi.
+
+fields = '__all__'
+
+Modelning serializer uchun mos barcha maydonlarini o‘z ichiga oladi.
+
+Serializer qanday ishlaydi?
+
+GET jarayoni:
+
+Database → Product obyektlari → Serializer → JSON response
+
+POST jarayoni:
+
+Request JSON → Serializer → Validation → Database'ga saqlash → JSON response
+
+PATCH jarayoni:
+
+Request JSON → Serializer → O‘zgarishlarni tekshirish → Database'ni yangilash → JSON response
+
+PATCH so‘rovida odatda partial=True orqali barcha maydonlarni qayta yuborish talab qilinmaydi.
+
+4. ViewSet nima?
+
+ViewSet — API endpointlari uchun tegishli amallarni bir joyda tashkil qilishga yordam beradi.
+
+Har bir CRUD amali uchun alohida view yozish o‘rniga Django REST Framework'dagi ModelViewSet dan foydalanishimiz mumkin.
+
+Bizning kod:
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+Bu yerda to‘rtta muhim tushuncha bor:
+
+ModelViewSet — tayyor CRUD imkoniyatlari.
+queryset — ishlanadigan obyektlar to‘plami.
+serializer_class — ma'lumotlarni serializatsiya va validatsiya qiladigan klass.
+permission_classes — request uchun ruxsatlarni tekshiradigan klasslar.
+5. ModelViewSet CRUD metodlari
+HTTP	Metod	Vazifasi
+GET	list()	Barcha product'larni olish
+GET	retrieve()	Bitta product'ni olish
+POST	create()	Yangi product yaratish
+PATCH	partial_update()	Qisman yangilash
+PUT	update()	To‘liq yangilash
+DELETE	destroy()	Product'ni o‘chirish
+Endpoint misollari
+
+Product ro‘yxati:
+
+GET /api/products/products/
+
+
+Bitta product:
+
+GET /api/products/products/1/
+
+
+Yangi product:
+
+POST /api/products/products/
+
+
+Product narxini o‘zgartirish:
+
+PATCH /api/products/products/1/
+
+
+Masalan, request body:
+
+{
+    "price": "1400.00"
+}
+
+
+Product'ni o‘chirish:
+
+DELETE /api/products/products/1/
+
+
+Bu URL'lar loyihamizda ishlatilayotgan endpointlar misolidir. Aniq URL'lar router va urls.py sozlamalariga bog‘liq.
+
+6. Queryset nima?
+queryset = Product.objects.all()
+
+
+Bu qator ViewSet qaysi product obyektlari bilan ishlashini belgilaydi.
+
+Product — model.
+objects — model manager'i.
+all() — barcha obyektlarni qamrab oluvchi QuerySet yaratadi.
+queryset — ViewSet ishlatadigan atribut.
+
+Masalan, database'da quyidagi product'lar bo‘lsa:
+
+ID	Name	Price
+1	Keyboard	150.00
+2	Mouse	45.00
+3	Monitor	300.00
+
+Product.objects.all() ushbu obyektlarni qamrab oladi.
+
+Muhim: Django QuerySet odatda lazy ishlaydi. Ya'ni SQL so‘rovi ko‘pincha ma'lumotlar kerak bo‘lgan vaqtda bajariladi.
+
+Queryset faqat GET uchun emas. ModelViewSet ma'lum ID bo‘yicha obyektni topishda ham undan foydalanadi.
+
+7. Serializer_class nima?
+serializer_class = ProductSerializer
+
+
+Bu qator ViewSet'ga qaysi serializer'dan foydalanishni aytadi.
+
+GET paytida serializer obyektlarni JSON ko‘rinishiga o‘tkazadi.
+
+POST va PATCH paytida esa kelgan ma'lumotlarni tekshirish va obyektni yaratish yoki yangilash jarayonida ishlatiladi.
+
+Agar validatsiya muvaffaqiyatsiz bo‘lsa, odatda 400 Bad Request javobi qaytariladi.
+
+8. Permission_classes nima?
+permission_classes = [IsAdminOrReadOnly]
+
+
+Bu yerda IsAdminOrReadOnly — loyihamizdagi custom permission klassi.
+
+Uning maqsadi:
+
+Oddiy foydalanuvchiga o‘qish amallariga ruxsat berish.
+Staff foydalanuvchiga yozish amallarini ham bajarishga ruxsat berish.
+
+Permission klassining soddalashtirilgan misoli:
+
+from rest_framework.permissions import BasePermission, SAFE_METHODS
+
+class IsAdminOrReadOnly(BasePermission):
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.is_staff
+        )
+
+
+SAFE_METHODS quyidagilarni o‘z ichiga oladi:
+
+GET
+HEAD
+OPTIONS
+
+Ushbu misolda anonim foydalanuvchi ham o‘qish so‘rovlarini yuborishi mumkin. Bu authentication sozlamalariga ham mos bo‘lishi kerak.
+
+is_staff=True — foydalanuvchi staff ekanini bildiradi. Bu is_superuser=True bilan bir xil emas.
+
+9. Authentication va Authorization
+
+Authentication — foydalanuvchi kimligini aniqlash.
+
+Misol: login orqali access token olish.
+
+Authorization — foydalanuvchiga qaysi amalni bajarish mumkinligini tekshirish.
+
+Misol: oddiy user PATCH yuborganda 403 Forbidden olishi.
+
+Bizda quyidagilar mavjud:
+
+Register API
+JWT login
+Access token
+Refresh token
+Profile API
+request.user
+Custom permissions
+
+JWT tokenni olishning o‘zi avtomatik ravishda barcha amallarga ruxsat bermaydi. Authentication va permissions birgalikda ishlaydi.
+
+10. Router va URL'lar
+
+Hozircha bu mavzu chuqur o‘rganilmagan.
+
+Keyingi bosqichda quyidagilarni ko‘ramiz:
+
+router.register()
+urls.py
+ViewSet va URL o‘rtasidagi bog‘lanish.
+List va detail endpointlari.
+Router HTTP metodlarini tegishli ViewSet amallariga qanday bog‘lashi.
+11. Validation
+
+Keyin o‘rganiladigan mavzular:
+
+Required fields.
+read_only va write_only.
+validate_<field>().
+validate().
+Price validation.
+Stock validation.
+Xato response'lari.
+
+Masalan:
+
+{
+    "price": ["This field is required."]
+}
+
+
+Bunday xato serializer validatsiyasi vaqtida paydo bo‘lishi mumkin.
+
+12. Keyingi roadmap
+Birinchi navbatda
+ModelViewSet ni chuqur o‘rganish.
+list(), retrieve(), create(), partial_update(), destroy() metodlari.
+Router va URL'lar.
+Serializer validation.
+Keyingi bosqich
+JWT ichki ishlashi.
+IsAuthenticated va IsAdminUser.
+Custom permissions.
+Category API.
+Advanced filtering, search va ordering.
+Pagination sozlamalari.
+Keyinroq
+
+Frontend: Vite, React, Axios va backend integratsiyasi.
+
+HOZIRGI CHECKPOINT
+Django Backend              DONE
+Product Model               DONE
+Product CRUD                DONE
+Search / Filter / Ordering  DONE
+Serializer asoslari         DONE
+Authentication / JWT        DONE
+Permissions                 DONE
+
+ModelViewSet                 IN PROGRESS
+Router / URLs                NEXT
+Validation                   NEXT
+Advanced API                 LATER
+Frontend                     LATER
+
+
+Keyingi dars: ModelViewSet ichidagi list(), retrieve(), create(), partial_update() va destroy() metodlarini qatorma-qator o‘rganish.
+
+Asosiy qoida: Kodni yodlash emas, har bir qator nima uchun kerakligini tushunish.
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+🗺️ Electronics Store — To‘liq Backend Roadmap (0 dan hozirgacha)
+Bu roadmap loyihani eng boshida Django o‘rnatishdan boshlab, hozirgi Product Validation bosqichigacha qamrab oladi. Qaysi ishlarni bajarganimizni, qaysilarini tekshirganimizni va hali nimalar qolganini ajratib qo‘ydim.
+
+✅ Bajarilgan va amalda tekshirilgan
+
+🟡 Boshlangan yoki qisman o‘rganilgan
+
+⏳ Hali bajarilmagan
+
+1. Loyihani 0 dan yaratish
+Bajarilgan
+
+Python/Django muhitida loyiha boshlash.
+
+Django project yaratish.
+
+Django REST Framework o‘rnatish.
+
+products app yaratish.
+
+users app yaratish.
+
+Database konfiguratsiyasini ishga tushirish.
+
+manage.py orqali Django loyihasini boshqarish.
+
+Backend serverini ishga tushirish va API'ni tekshirish.
+2. Django project tuzilishi va konfiguratsiyasi
+Bajarilgan
+
+config/settings.py bilan ishlash.
+
+config/urls.py ni sozlash.
+
+products/urls.py ni asosiy URL'ga ulash.
+
+users/urls.py ni asosiy URL'ga ulash.
+
+categories/urls.py ni asosiy URL'ga ulash.
+
+cart/urls.py ni asosiy URL'ga ulash.
+
+Root endpoint yaratish: /.
+
+JsonResponse orqali API ishlayotganini tekshirish.
+
+MEDIA_URL va MEDIA_ROOT uchun DEBUG rejimida media URL konfiguratsiyasi.
+Root endpoint javobi:
+
+json
+{
+  "message": "Electronics Store API ishlayapti!"
+}
+3. Product modeli va database
+Bajarilgan
+
+Product modelini yaratish.
+
+Product ma'lumotlarini database'da saqlash.
+
+6 ta product qo‘shish.
+
+Product ID bilan ishlash.
+
+price maydoni bilan ishlash.
+
+stock / quantity maydoni bilan ishlash.
+
+CRUD orqali ma'lumotlar o‘zgarishini tekshirish.
+4. Product Serializer
+Asosiy qismi o‘rganilgan
+
+serializers.py yaratish.
+
+ProductSerializer yozish.
+
+ModelSerializer tushunchasi.
+
+Meta klassi.
+
+model = Product.
+
+fields = '__all__'.
+
+Model obyektlarini JSON ko‘rinishiga o‘tkazish.
+
+POST/PATCH ma'lumotlarini serializer orqali qayta ishlash.
+
+Validation qoidalarini to‘liq yozish va sinash.
+Misol:
+
+python
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+5. Product CRUD API
+Bajarilgan va tekshirilgan
+
+GET — barcha product'larni olish.
+
+GET — bitta product'ni ID orqali olish.
+
+POST — yangi product yaratish.
+
+PATCH — product'ning ayrim maydonlarini yangilash.
+
+PUT — to‘liq yangilash uchun endpoint mavjudligi.
+
+DELETE — product o‘chirish.
+
+POST orqali database'ga saqlanishini tekshirish.
+
+PATCH orqali narxni o‘zgartirish: 1500.00 → 1400.00.
+
+GET orqali o‘zgarishni tasdiqlash.
+
+Stock qiymatini tekshirish.
+Asosiy endpointlar:
+
+HTTP
+
+Endpoint
+
+Vazifasi
+
+GET
+
+/api/products/products/
+
+Product ro‘yxati
+
+GET
+
+/api/products/products/1/
+
+Bitta product
+
+POST
+
+/api/products/products/
+
+Yangi product
+
+PATCH
+
+/api/products/products/1/
+
+Qisman yangilash
+
+PUT
+
+/api/products/products/1/
+
+To‘liq yangilash
+
+DELETE
+
+/api/products/products/1/
+
+O‘chirish
+
+6. Search, Filter, Ordering va Pagination
+Sozlangan
+
+SearchFilter.
+
+DjangoFilterBackend.
+
+OrderingFilter.
+
+search_fields = ['name', 'description'].
+
+ProductFilter ulanishi.
+
+ordering_fields orqali saralash maydonlarini belgilash.
+
+PageNumberPagination.
+
+PAGE_SIZE = 2.
+
+Pagination response tuzilishini Category API'da tekshirish.
+products/views.py ichidagi tegishli sozlamalar:
+
+python
+filter_backends = [
+    filters.SearchFilter,
+    DjangoFilterBackend,
+    filters.OrderingFilter,
+]
+
+search_fields = ['name', 'description']
+filterset_class = ProductFilter
+ordering_fields = ['name', 'price', 'stock', 'created_at']
+7. Authentication — Register, Login va JWT
+Asosiy funksiyalar bajarilgan
+
+Register API.
+
+Yangi user yaratish.
+
+Password tekshirish.
+
+JWT login.
+
+Access token olish.
+
+Refresh token olish.
+
+Token refresh endpointini tekshirish.
+
+Profile API.
+
+Login qilgan user ma'lumotlarini olish.
+
+Username va profil ma'lumotlari bilan ishlash.
+
+JWT ichki ishlashini chuqur o‘rganish.
+
+Token expiration va xato tokenlarni alohida sinash.
+settings.py dagi authentication sozlamalari:
+
+python
+'DEFAULT_AUTHENTICATION_CLASSES': (
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
+    'rest_framework.authentication.BasicAuthentication',
+    'rest_framework.authentication.SessionAuthentication',
+),
+8. Permissions va user huquqlari
+Amalda tekshirilgan
+
+permissions.py yaratish.
+
+IsAdminOrReadOnly permission klassi.
+
+SAFE_METHODS tushunchasi.
+
+Oddiy user GET qila olishini tekshirish.
+
+Oddiy user PATCH qilganda 403 Forbidden olish.
+
+is_staff qiymatini tekshirish.
+
+is_staff = True qilib yozish huquqini sinash.
+
+Staff user bilan PATCH bajarish.
+
+Category API'ga ham IsAdminOrReadOnly ulash.
+Ishlatayotgan permission:
+
+python
+class IsAdminOrReadOnly(BasePermission):
+    ...
+Eslatma: is_staff=True — Django admin saytiga kirish huquqi bilan bog‘liq flag; u avtomatik ravishda is_superuser=True degani emas.
+
+9. ProductViewSet va Router
+Ko‘rib chiqilgan, chuqur amaliyoti davom etadi
+
+ModelViewSet vazifasini o‘rganish.
+
+queryset = Product.objects.all().
+
+serializer_class = ProductSerializer.
+
+permission_classes = [IsAdminOrReadOnly].
+
+list(), retrieve(), create(), update(), partial_update(), destroy() vazifalarini ko‘rib chiqish.
+
+DefaultRouter() yaratish.
+
+router.register() ishlatilishi.
+
+include(router.urls) orqali URL ulash.
+
+ModelViewSet metodlarini kerak bo‘lganda override qilib, amalda kod yozish.
+
+Router va URL bog‘lanishini to‘liq yakunlash.
+10. Category API
+Bu qismni Product Validation'dan oldin amalda bajardik.
+
+CRUD va asosiy validation tekshirilgan
+
+categories app bilan ishlash.
+
+Category modelini yaratish.
+
+name = models.CharField(max_length=100, unique=True).
+
+description = models.TextField(blank=True).
+
+CategorySerializer.
+
+CategoryViewSet.
+
+categories/urls.py va DefaultRouter.
+
+config/urls.py ga Category API ulash.
+
+IsAdminOrReadOnly permission qo‘shish.
+
+GET orqali 3 ta kategoriya borligini ko‘rish.
+
+POST orqali Accessories yaratish.
+
+PATCH orqali description'ni yangilash.
+
+DELETE orqali kategoriyani o‘chirish.
+
+Bo‘sh nom yuborib validation xatosini ko‘rish.
+
+Takroriy Smartphones nomini yuborib unique validation xatosini ko‘rish.
+Category serializer'iga qo‘shgan kodimiz:
+
+python
+def validate_name(self, value):
+    if not value.strip():
+        raise serializers.ValidationError(
+            "Category name cannot be empty."
+        )
+    return value
+Bo‘sh qiymat testida DRF standart This field may not be blank. xabarini qaytardi. Takroriy nom uchun esa unique=True tekshiruvi ishladi. Bu testlar muvaffaqiyatli o‘tdi.
+
+11. Hozirgi checkpoint — Product Validation
+Product Validation boshlanishi
+Hozir aynan shu bosqichga kelganmiz.
+
+
+products/serializers.py ni tekshirish.
+
+price manfiy qiymat bo‘lmasligini ta'minlash.
+
+stock manfiy qiymat bo‘lmasligini ta'minlash.
+
+Required field'larni tekshirish.
+
+read_only va write_only bilan ishlash.
+
+validate_<field>() metodini amalda yozish.
+
+Umumiy validate() metodini o‘rganish.
+
+Thunder Client orqali noto‘g‘ri qiymatlarni sinash.
+
+400 Bad Request response'larini tushunish.
+12. Product Validation'dan keyingi backend ishlari
+Bular hali oldinda:
+
+
+Product va Category o‘rtasidagi bog‘lanishni tekshirish.
+
+Product ownership va custom permissions.
+
+Category filtering'ni chuqurroq tekshirish.
+
+Cart API'ni to‘liq tekshirish.
+
+Cart uchun user authentication va ownership qoidalari.
+
+JWT, request.user, IsAuthenticated va IsAdminUser ni mustahkamlash.
+
+Barcha CRUD endpointlarni qayta test qilish.
+
+Xatolar va edge case'larni tekshirish.
+
+API hujjatlari va konfiguratsiyani yakunlash.
+
+Backendni frontendga ulashga tayyor holatga keltirish.
+13. Backend tugagach — 0 dan tezkor takrorlash
+Backend to‘liq tugagandan keyin:
+
+Django project va app'lar.
+
+Models va database.
+
+Serializers va validation.
+
+Views, ViewSets va Router.
+
+CRUD, Search, Filter, Ordering va Pagination.
+
+Register, JWT login va refresh.
+
+Permissions.
+
+Category va Cart.
+
+Thunder Client orqali umumiy API testi.
+
+Bu safar har bir mavzuni qisqa eslab, kodni imkon qadar o‘zimiz yozib chiqamiz.
+
+Hozir qiladigan aniq ishimiz
+products/serializers.py faylini ochib, ichidagi kodni yubor.
+
+Shu yerdan Product Validation'ni boshlaymiz. Frontendga hozircha o‘tmaymiz; avval backendni yakunlaymiz.
+
+
+
+
+
+
+
+
+
+{
+  "name": "Test Product",
+  "description": "Validation test",
+  "price": -100,
+  "stock": 10
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+#
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+🗺️ Electronics Store Backend — To‘liq Roadmap (0 dan hozirgacha)
+Bu roadmap loyihani Django'ni o‘rnatishdan boshlab, hozirgi holatimiz — Product Validation, Swagger va Cart API'ni yakunlash bosqichigacha qamrab oladi.
+
+Holatlarni quyidagicha ajratdim:
+
+✅ Bajarilgan yoki amalda tekshirilgan
+
+🟡 Kod yozilgan, lekin yakuniy tekshiruv kerak
+
+⏳ Hali bajarilmagan
+
+Muhim: oldin amalda tekshirgan ishlarimizni va faqat kodini ko‘rib chiqqan qismlarimizni alohida belgiladim. Kod mavjudligi uning barcha holatlarda to‘g‘ri ishlashini hali kafolatlamaydi.
+
+1. Django loyihasini 0 dan yaratish
+Bajarilgan
+Python virtual muhit (venv) bilan ishlash.
+
+Django loyihasini yaratish.
+
+Django REST Framework o‘rnatish.
+
+products, users, categories va cart app'larini yaratish.
+
+Database konfiguratsiyasi bilan ishlash.
+
+manage.py orqali loyihani boshqarish.
+
+Development serverni ishga tushirish.
+
+API ishlayotganini tekshirish.
+
+Root endpoint:
+
+json
+{
+  "message": "Electronics Store API ishlayapti!"
+}
+2. Django project tuzilishi va URL konfiguratsiyasi
+Bajarilgan
+config/settings.py sozlamalari.
+
+config/urls.py asosiy URL konfiguratsiyasi.
+
+products/urls.py ni ulash.
+
+users/urls.py ni ulash.
+
+categories/urls.py ni ulash.
+
+cart/urls.py ni ulash.
+
+Root endpoint uchun JsonResponse.
+
+MEDIA_URL va MEDIA_ROOT sozlamalari.
+
+DEBUG=True rejimida media fayllarini taqdim etish.
+
+Asosiy API yo‘llari:
+
+Yo‘l
+
+Vazifasi
+
+/api/products/
+
+Product API
+
+/api/categories/
+
+Category API
+
+/api/users/
+
+Authentication va profile
+
+/api/cart/
+
+Savatcha API
+
+/admin/
+
+Django Admin
+
+3. Product modeli va database
+Bajarilgan
+Product modeli yaratildi.
+
+Product ma’lumotlarini database'da saqlash.
+
+6 ta product qo‘shish.
+
+id, name, price, description, stock maydonlari.
+
+Rasm uchun ImageField.
+
+created_at maydoni.
+
+CRUD orqali ma’lumotlar o‘zgarishini tekshirish.
+
+Hozirgi modelda Category bilan bog‘lanish ham mavjud:
+
+python
+category = models.ForeignKey(
+    'categories.Category',
+    on_delete=models.CASCADE,
+    related_name='products',
+    null=True,
+    blank=True,
+)
+Bu bog‘lanish kodda mavjud. Lekin CASCADE sababli kategoriya o‘chirilganda unga tegishli product'lar ham o‘chadi. Bu biznes qoidasi sifatida keyinchalik qayta ko‘rib chiqilishi kerak.
+
+4. ProductSerializer va Validation
+Hozirgi asosiy bosqich
+ProductSerializer yaratildi.
+
+ModelSerializer va Meta tushunchalari.
+
+fields = '__all__' bilan barcha model maydonlarini serializer'ga qo‘shish.
+
+validate_price() metodi.
+
+validate_stock() metodi.
+
+read_only va write_only tushunchalari.
+
+required maydonlarni tekshirish.
+
+Hozirgi serializer kodi:
+
+python
+from rest_framework import serializers
+from .models import Product
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Price must be greater than zero."
+            )
+        return value
+
+    def validate_stock(self, value):
+        if value < 0:
+            raise serializers.ValidationError(
+                "Stock cannot be negative."
+            )
+        return value
+Bizning biznes qoidamiz:
+
+price > 0 bo‘lishi shart.
+
+stock >= 0 bo‘lishi shart.
+
+id avtomatik yaratiladi va read_only=True.
+
+price majburiy.
+
+stock modeldagi default=0 sababli ixtiyoriy.
+
+Amalda tekshirilgan natijalar:
+
+validate_stock(-5) o‘zimiz yozgan validation xatosini qaytardi.
+
+id.read_only → True.
+
+price.required → True.
+
+stock.required → False.
+
+name.read_only → False.
+
+name.write_only → False.
+
+price yuborilmaganida 400 Bad Request qaytdi.
+
+So‘rovda id=999 yuborilganda, yaratilgan product id=7 bilan qaytdi.
+
+Hali bajarilmagan:
+
+⏳ Umumiy validate() metodini o‘rganish va zarurat bo‘lsa qo‘shish.
+
+⏳ Product validation'ning barcha holatlarini yakuniy test qilish.
+
+⏳ Serializer xatolarini birgalikda tekshirish.
+
+5. Product CRUD API
+Asosan bajarilgan
+GET — barcha product'larni olish.
+
+GET — bitta product'ni ID orqali olish.
+
+POST — product yaratish.
+
+PATCH — qisman yangilash.
+
+PUT — to‘liq yangilash endpointi.
+
+DELETE — product o‘chirish.
+
+Database'ga saqlanishini tekshirish.
+
+Narxni 1500.00 dan 1400.00 ga o‘zgartirish.
+
+Asosiy endpointlar:
+
+Method
+
+Endpoint
+
+GET
+
+/api/products/products/
+
+GET
+
+/api/products/products/1/
+
+POST
+
+/api/products/products/
+
+PATCH
+
+/api/products/products/1/
+
+PUT
+
+/api/products/products/1/
+
+DELETE
+
+/api/products/products/1/
+
+6. Search, Filter, Ordering va Pagination
+Kod yozilgan
+SearchFilter.
+
+DjangoFilterBackend.
+
+OrderingFilter.
+
+ProductFilter.
+
+ordering_fields.
+
+PageNumberPagination.
+
+PAGE_SIZE = 2.
+
+Pagination response'ini Category API'da tekshirish.
+
+products/views.py dagi filter sozlamalari:
+
+python
+filter_backends = [
+    filters.SearchFilter,
+    DjangoFilterBackend,
+    filters.OrderingFilter,
+]
+
+search_fields = ['name', 'description']
+filterset_class = ProductFilter
+ordering_fields = [
+    'name',
+    'price',
+    'stock',
+    'created_at',
+]
+products/filters.py orqali quyidagilar sozlangan:
+
+category — kategoriya ID'si.
+
+min_price — minimal narx.
+
+max_price — maksimal narx.
+
+stock — eng kam zaxira miqdori.
+
+Masalan:
+
+text
+/api/products/products/?category=2&min_price=100000&max_price=500000
+Hali yakuniy umumiy testda search, filter, ordering va pagination'ni qayta tekshirish kerak.
+
+7. Authentication — Register, Login, JWT va Profile
+Kod yozilgan, yakuniy tekshiruv kerak
+Register API.
+
+User.objects.create_user() orqali foydalanuvchi yaratish.
+
+Username takrorlanishini tekshirish.
+
+JWT login.
+
+Access va refresh tokenlarini olish.
+
+Token refresh endpointi.
+
+Profile API.
+
+request.user orqali joriy foydalanuvchini aniqlash.
+
+users/urls.py ni o‘zgartirib, o‘zimiz yozgan LoginView bilan uladik.
+
+Hozirgi endpointlar:
+
+Method
+
+Endpoint
+
+POST
+
+/api/users/register/
+
+POST
+
+/api/users/login/
+
+POST
+
+/api/users/token/refresh/
+
+GET
+
+/api/users/profile/
+
+Hali bajarilmagan:
+
+⏳ Login va refresh tokenlarni yakuniy test qilish.
+
+⏳ Noto‘g‘ri yoki muddati tugagan tokenlarni tekshirish.
+
+⏳ Register uchun serializer validation va qo‘shimcha chekka holatlar.
+
+⏳ Profile endpointi login qilmagan foydalanuvchiga yopiq ekanini tekshirish.
+
+8. Permissions va user huquqlari
+Amalda tekshirilgan
+permissions.py yaratish.
+
+IsAdminOrReadOnly permission klassi.
+
+SAFE_METHODS tushunchasi.
+
+Oddiy user GET qila olishini tekshirish.
+
+Oddiy user PATCH qilganda 403 Forbidden olish.
+
+is_staff=True bilan yozish huquqini sinash.
+
+Category API'ga ham IsAdminOrReadOnly ulash.
+
+Eslatma: is_staff=True avtomatik ravishda is_superuser=True degani emas.
+
+Hali JWT va permission'larni barcha endpointlarda yakuniy test qilish kerak.
+
+9. ProductViewSet va Router
+Ko‘rib chiqilgan
+ModelViewSet vazifasi.
+
+queryset = Product.objects.all().
+
+serializer_class = ProductSerializer.
+
+permission_classes = [IsAdminOrReadOnly].
+
+DefaultRouter() va router.register().
+
+include(router.urls).
+
+products/views.py da ProductViewSet mavjud. Ammo barcha ViewSet metodlarini override qilish yoki qayta yozish shart emas — faqat maxsus xatti-harakat kerak bo‘lsa override qilinadi.
+
+Hali bajarilmagan:
+
+⏳ Router va endpointlarni yakuniy ko‘rib chiqish.
+
+⏳ Barcha CRUD amallarini yakuniy test qilish.
+
+10. Category API
+CRUD va asosiy validation tekshirilgan
+Category modeli.
+
+name va description maydonlari.
+
+CategorySerializer.
+
+CategoryViewSet.
+
+Router va URL ulanishi.
+
+IsAdminOrReadOnly.
+
+3 ta kategoriya borligini GET orqali ko‘rish.
+
+Accessories yaratish.
+
+PATCH orqali description yangilash.
+
+DELETE orqali kategoriya o‘chirish.
+
+Bo‘sh nom va takroriy nom validation'ini tekshirish.
+
+Category modelida:
+
+python
+name = models.CharField(max_length=100, unique=True)
+description = models.TextField(blank=True)
+Bo‘sh nom testida DRF standart This field may not be blank. xabari qaytgan. Takroriy Smartphones nomida unique=True validation ishlagan.
+
+11. Swagger va OpenAPI
+O‘rnatilgan va brauzerda ochilgan
+drf-spectacular o‘rnatildi.
+
+INSTALLED_APPS ga qo‘shildi.
+
+DEFAULT_SCHEMA_CLASS sozlandi.
+
+SPECTACULAR_SETTINGS qo‘shildi.
+
+OpenAPI schema endpointi.
+
+Swagger UI endpointi.
+
+ReDoc endpointi.
+
+Product, Users, Categories va Cart bo‘limlarini Swagger'da ko‘rish.
+
+JWT Bearer security sxemasini sozlash.
+
+Hozirgi URL'lar:
+
+Vazifa
+
+Endpoint
+
+Swagger UI
+
+/api/docs/
+
+OpenAPI schema
+
+/api/schema/
+
+ReDoc
+
+/api/redoc/
+
+Swagger brauzerda ochilgani tasdiqlangan.
+
+Hali tekshirish kerak:
+
+⏳ Authorize orqali JWT access token kiritish.
+
+⏳ Himoyalangan endpointlarga token bilan so‘rov yuborish.
+
+⏳ Ochiq register va login endpointlari hujjatda noto‘g‘ri ravishda autentifikatsiya talab qilayotgandek ko‘rsatilmasligini tekshirish.
+
+12. Cart API
+Asosiy kod yozilgan
+Cart modeli.
+
+CartItem modeli.
+
+Har bir user uchun bitta savatcha (OneToOneField).
+
+Savatchadagi mahsulotlar (ForeignKey).
+
+CartItemSerializer.
+
+CartSerializer.
+
+Umumiy narxni hisoblash.
+
+Savatchani ko‘rish.
+
+Mahsulot qo‘shish.
+
+Mahsulot miqdorini o‘zgartirish.
+
+Mahsulotni o‘chirish.
+
+Savatchani tozalash.
+
+IsAuthenticated permission.
+
+request.user orqali ownership tekshiruvi.
+
+Asosiy endpointlar:
+
+Method
+
+Endpoint
+
+Vazifasi
+
+GET
+
+/api/cart/
+
+Savatchani ko‘rish
+
+POST
+
+/api/cart/
+
+Mahsulot qo‘shish
+
+PATCH
+
+/api/cart/items/1/
+
+Miqdorni yangilash
+
+DELETE
+
+/api/cart/items/1/
+
+Mahsulotni o‘chirish
+
+DELETE
+
+/api/cart/clear/
+
+Savatchani tozalash
+
+Hali bajarilmagan:
+
+⏳ Cart API'ni yakuniy test qilish.
+
+⏳ Miqdor validation'ini barcha holatlarda tekshirish.
+
+⏳ Stock yetarli bo‘lmagan holatlarni tekshirish.
+
+⏳ Takroriy CartItem yozuvlarining oldini olish.
+
+⏳ Parallel so‘rovlarda stock va quantity xavfsizligini ko‘rib chiqish.
+
+⏳ Boshqa user savatchasiga kirish imkoni yo‘qligini tekshirish.
+
+13. Hozirgi aniq checkpoint
+Django backend asoslari
+
+Project, modellar, CRUD, URL'lar, Category va Swagger o‘rnatilgan.
+
+Hozirgi bosqich: Product Validation va backendni yakunlash
+
+validate_price() sharti value <= 0 qilib belgilandi. Qolgan qismlarni yakuniy testga tayyorlash kerak.
+
+Keyingi bosqichlar
+
+Cart va JWT chekka holatlari, permission'lar, Swagger authentication, umumiy test va hujjatlashtirish.
+
+14. Backendni tugatish uchun qolgan ishlar — qisqa checklist
+Quyidagi tartibda davom etamiz:
+
+
+Product validation'ni yakunlash.
+
+Product–Category bog‘lanishi va o‘chirish qoidasini ko‘rib chiqish.
+
+Cart validation va ownership'ni yakunlash.
+
+Register, Login, JWT refresh va Profile'ni tekshirish.
+
+Permissions va IsAuthenticated / IsAdminUser farqini mustahkamlash.
+
+Swagger JWT Authorize funksiyasini tekshirish.
+
+Search, Filter, Ordering va Pagination'ni umumiy tekshirish.
+
+Barcha CRUD endpointlarni test qilish.
+
+Xato holatlari va edge case'larni test qilish.
+
+API hujjatlari va konfiguratsiyani yakunlash.
+
+Backendni frontendga ulashga tayyorlash.
+
+Backend mavzularini 0 dan tezkor takrorlash.
+Bizning kelishuvimiz: hozir har bir kichik o‘zgarishdan keyin test qilmaymiz. Avval qolgan muhim ishlarni yakunlaymiz, so‘ng Swagger yoki Thunder Client orqali bitta tartibli, umumiy test bosqichini bajaramiz.
+
+
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from products.models import Product
+from .models import Cart, CartItem
+from .serializers import CartSerializer
+
+
+class CartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        return Response(CartSerializer(cart).data)
+
+    def post(self, request):
+        product_id = request.data.get('product')
+        raw_quantity = request.data.get('quantity', 1)
+
+        if product_id is None:
+            return Response(
+                {'error': 'Product ID is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # bool va kasrli sonlarni quantity sifatida qabul qilmaymiz.
+        if (
+            isinstance(raw_quantity, bool)
+            or not str(raw_quantity).isdigit()
+        ):
+            return Response(
+                {'error': 'Quantity must be a positive integer.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        quantity = int(raw_quantity)
+
+        if quantity < 1:
+            return Response(
+                {'error': 'Quantity must be at least 1.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            product = get_object_or_404(
+                Product.objects.select_for_update(),
+                pk=product_id
+            )
+
+            cart, _ = Cart.objects.get_or_create(user=request.user)
+
+            item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={'quantity': quantity}
+            )
+
+            new_quantity = quantity if created else item.quantity + quantity
+
+            if new_quantity > product.stock:
+                if created:
+                    # Stock yetarli bo'lmasa, yangi item saqlanmasin.
+                    item.delete()
+
+                return Response(
+                    {'error': 'Not enough product in stock.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if not created:
+                item.quantity = new_quantity
+                item.save(update_fields=['quantity'])
+
+        cart.refresh_from_db()
+        return Response(
+            CartSerializer(cart).data,
+            status=status.HTTP_201_CREATED
+        )
+
+
+class CartItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, item_id):
+        raw_quantity = request.data.get('quantity')
+
+        if (
+            raw_quantity is None
+            or isinstance(raw_quantity, bool)
+            or not str(raw_quantity).isdigit()
+        ):
+            return Response(
+                {'error': 'Quantity must be a positive integer.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        quantity = int(raw_quantity)
+
+        if quantity < 1:
+            return Response(
+                {'error': 'Quantity must be at least 1.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            item = get_object_or_404(
+                CartItem.objects.select_for_update().select_related('cart'),
+                pk=item_id,
+                cart__user=request.user
+            )
+
+            product = get_object_or_404(
+                Product.objects.select_for_update(),
+                pk=item.product_id
+            )
+
+            if quantity > product.stock:
+                return Response(
+                    {'error': 'Not enough product in stock.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            item.quantity = quantity
+            item.save(update_fields=['quantity'])
+            cart = item.cart
+
+        cart.refresh_from_db()
+        return Response(CartSerializer(cart).data)
+
+    def delete(self, request, item_id):
+        cart = get_object_or_404(Cart, user=request.user)
+
+        item = get_object_or_404(
+            CartItem,
+            pk=item_id,
+            cart=cart
+        )
+
+        item.delete()
+        cart.refresh_from_db()
+        return Response(CartSerializer(cart).data)
+
+
+class ClearCartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        cart.items.all().delete()
+
+        return Response(CartSerializer(cart).data)

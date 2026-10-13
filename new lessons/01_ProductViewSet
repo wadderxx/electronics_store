@@ -1,0 +1,19 @@
+Ha, tushundim! 😊 Sen oldingi faylga butun roadmapni emas, aynan bugungi “1-dars: ProductViewSet qanday ishlaydi?” darsini boshidan oxirigacha bitta tartibli faylga joylamoqchisan.
+
+Unda quyidagilar bo‘lishi kerak:
+
+ProductViewSet kodi va uning 4 ta qismi.
+
+ModelViewSet nima ekanligi.
+
+GET, POST, PATCH, PUT va DELETE metodlari.
+
+queryset ning batafsil tushuntirishi.
+
+serializer_class ning vazifasi.
+
+permission_classes ning vazifasi.
+
+Kod misollari va jadval.
+
+Oxirida test savoli va javob variantlari.
