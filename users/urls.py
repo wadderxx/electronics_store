@@ -12,7 +12,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import RegisterView, LoginView, UserProfileView
+from .views import RegisterView, UserProfileView
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,

@@ -31,43 +31,6 @@ class RegisterView(APIView):
         )
 
 
-class LoginView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-
-        if not username or not password:
-            return Response(
-                {'error': 'Username va password majburiy.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        user = authenticate(
-            request=request,
-            username=username,
-            password=password,
-        )
-
-        if user is None:
-            return Response(
-                {'error': 'Login yoki parol noto‘g‘ri.'},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        refresh = RefreshToken.for_user(user)
-
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-            },
-        })
-
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]

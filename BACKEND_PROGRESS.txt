@@ -5433,3 +5433,409 @@ class ClearCartView(APIView):
         cart.items.all().delete()
 
         return Response(CartSerializer(cart).data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+🗺️ Electronics Store Backend — To‘liq Roadmap
+Loyiha boshidan hozirgi checkpointgacha. GitHub mavzusi kiritilmadi.
+
+Bu roadmap backendda bajarilgan, kodi yozilgan-u hali tekshirilmagan, hozir qilinayotgan va hali boshlanmagan ishlarni ajratadi. Cart API'dagi Swagger orqali o‘zgartirish muammosi ham alohida kiritildi.
+
+1. Hozirgi umumiy holat
+Bajarilgan yoki amalda tekshirilgan
+
+Django asoslari, Product va Category modellari, asosiy CRUD, ayrim validation va permission tekshiruvlari, Swagger sahifasini ochish, migrationlar.
+
+Kodi yozilgan, yakuniy test kerak
+
+JWT Authentication, Register/Login/Profile, Search/Filter/Ordering, ProductViewSet, Cart API va Swagger autentifikatsiyasi.
+
+Muammo bor — ustuvor vazifa
+
+Cart qismida Swagger orqali o‘zgartirish kutilgandek ishlamayapti. Sababini hali aniq belgilamadik.
+
+Hali bajarilmagan
+
+Umumiy API testlari, barcha edge case'lar, yakuniy xavfsizlik tekshiruvi va frontendga tayyorlash.
+
+2. Django loyihasini yaratish va konfiguratsiya
+✅ Bajarilgan
+
+
+Python virtual muhit (venv)
+
+Django va Django REST Framework
+
+products, users, categories, cart ilovalari
+
+config/settings.py va config/urls.py
+
+Database konfiguratsiyasi
+
+Development server
+
+Root endpoint va API yo‘llari
+
+MEDIA_URL va MEDIA_ROOT
+
+Migrationlarni bajarish
+3. Product modeli va API
+Asosiy qismi bajarilgan
+
+
+Product modeli: name, price, description, stock, image, created_at
+
+Category bilan ForeignKey bog‘lanishi
+
+Product ma’lumotlarini database'ga saqlash
+
+ProductSerializer
+
+validate_price() — narx noldan katta bo‘lishi
+
+validate_stock() — zaxira manfiy bo‘lmasligi
+
+id avtomatik yaratilishi va read_only holati tekshirilgan
+
+GET, POST, PATCH, PUT va DELETE endpointlari yaratilgan
+Hali bajariladi:
+
+
+Product validation'ning barcha holatlarini yakuniy test qilish
+
+Umumiy validate() qachon kerakligini aniqlash
+
+Bir nechta noto‘g‘ri maydon yuborilgandagi xatolarni tekshirish
+
+Product–Category bog‘lanishida kategoriya o‘chirilishi qoidalarini ko‘rib chiqish
+
+Product CRUD'ni Swagger yoki Thunder Client orqali to‘liq sinash
+4. Search, Filter, Ordering va Pagination
+🟡 Kod yozilgan
+
+
+SearchFilter
+
+DjangoFilterBackend
+
+OrderingFilter
+
+ProductFilter
+
+min_price, max_price, category, stock filtrlari
+
+PAGE_SIZE = 2 konfiguratsiyasi
+
+Search natijalarini tekshirish
+
+Filtrlarni birgalikda tekshirish
+
+Narx va sana bo‘yicha tartiblashni tekshirish
+
+Pagination'ning barcha sahifalarini tekshirish
+5. Category API
+✅ Asosiy CRUD va validation tekshirilgan
+
+
+Category modeli va serializer
+
+CategoryViewSet va router
+
+IsAdminOrReadOnly
+
+Kategoriya yaratish, yangilash va o‘chirish
+
+Bo‘sh va takroriy nom validation'i
+
+Product bilan bog‘lanish va o‘chirish oqibatlarini yakuniy tekshirish
+
+Barcha permission'larni umumiy test qilish
+6. Users, Register, Login va JWT
+🟡 Kod yozilgan, yakuniy tekshiruv kerak
+
+
+RegisterSerializer
+
+RegisterView
+
+LoginView
+
+JWT access va refresh tokenlari
+
+Token refresh endpointi
+
+UserProfileView
+
+request.user orqali foydalanuvchini aniqlash
+
+Register'ni Swagger'da to‘g‘ri JSON bilan tekshirish
+
+Username takrorlanishini va email holatlarini tekshirish
+
+Noto‘g‘ri parol bilan login
+
+Refresh token va muddati tugagan token
+
+Token bilan Profile endpointiga kirish
+
+Token yo‘q bo‘lganda Profile yopiq ekanini tekshirish
+7. Permissions va xavfsizlik
+Asosiy permission yozilgan va ayrim holatlar tekshirilgan
+
+
+products/permissions.py
+
+IsAdminOrReadOnly
+
+SAFE_METHODS
+
+Oddiy foydalanuvchining yozish huquqi cheklanganini tekshirish
+
+is_staff va is_superuser farqini ko‘rib chiqish
+
+Product va Category permission'larini to‘liq tekshirish
+
+Cart uchun IsAuthenticated tekshiruvi
+
+Bir foydalanuvchi boshqa foydalanuvchining savatchasiga kira olmasligini tekshirish
+
+IsAdminUser va IsAuthenticated farqini mustahkamlash
+8. Swagger va OpenAPI
+✅ O‘rnatilgan va brauzerda ochilgan
+
+
+drf-spectacular
+
+/api/docs/
+
+/api/schema/
+
+/api/redoc/
+
+JWT Bearer security sozlamasi
+
+Swagger'dagi Authorize orqali access token kiritish
+
+Himoyalangan endpointlarni token bilan ishlatish
+
+Register va Login endpointlari ochiq ekanini hujjatda tekshirish
+
+Cart endpointlari uchun so‘rov maydonlari va javoblarni tekshirish
+9. Cart API — asosiy muammo
+Cart API'ni tuzatish
+Hozirgi muammo: Swagger ochiladi, boshqa API qismlarida o‘zgarishlar qilish mumkin, lekin Cart qismida o‘zgartirish kutilgandek ishlamayapti.
+
+Hozircha sabab noma’lum. Bu URL konfiguratsiyasi, Swagger request body, serializer, autentifikatsiya yoki view logikasidan bo‘lishi mumkin. Kodni va xatolik javobini ko‘rmasdan aniq sababni aytib bo‘lmaydi.
+
+Cart'da mavjud qismlar
+
+Cart modeli — har bir foydalanuvchiga bitta savatcha
+
+CartItem modeli
+
+CartItemSerializer
+
+CartSerializer
+
+total_price hisoblash
+
+CartView — savatchani olish va mahsulot qo‘shish
+
+CartItemView — miqdorni o‘zgartirish va mahsulotni o‘chirish
+
+ClearCartView — savatchani tozalash
+
+IsAuthenticated
+
+Migrationlar: takroriy mahsulot va miqdor uchun database cheklovlari
+Cart endpointlari
+Method
+
+Endpoint
+
+Vazifa
+
+GET
+
+/api/cart/
+
+Savatchani ko‘rish
+
+POST
+
+/api/cart/
+
+Mahsulot qo‘shish
+
+PATCH
+
+/api/cart/items/1/
+
+Miqdorni o‘zgartirish
+
+DELETE
+
+/api/cart/items/1/
+
+Mahsulotni o‘chirish
+
+DELETE
+
+/api/cart/clear/
+
+Savatchani tozalash
+
+Cart bo‘yicha bajariladigan ishlar
+
+1. URL'lar to‘g‘ri ulanganini tekshirish
+
+2. Swagger'da POST /api/cart/ uchun product va quantity yuborish
+
+3. GET /api/cart/ orqali qo‘shilgan mahsulot ko‘rinishini tekshirish
+
+4. PATCH orqali quantity o‘zgartirish
+
+5. DELETE orqali item o‘chirish
+
+6. DELETE /api/cart/clear/ orqali savatchani tozalash
+
+7. 401/403, 400 va 404 xatolarini tekshirish
+
+8. Stock yetarli bo‘lmagan holatlarni sinash
+
+9. Bitta mahsulotni qayta qo‘shganda miqdor to‘g‘ri oshishini tekshirish
+
+10. Boshqa user savatchasiga kira olmasligini tekshirish
+
+11. Parallel so‘rovlarda miqdor va stock xavfsizligini ko‘rib chiqish
+Muhim: CartItem uchun modeldagi PositiveIntegerField va database cheklovlari foydali, lekin API darajasida noto‘g‘ri miqdor, stock va takroriy so‘rovlar bilan ishlash ham alohida tekshirilishi kerak.
+
+10. Yakuniy umumiy test
+Barcha muhim kod qismlari tayyor bo‘lgach, kelishuvimiz bo‘yicha har bir mayda o‘zgarishdan keyin emas, bitta tartibli test bosqichida tekshiramiz.
+
+
+python manage.py check
+
+python manage.py test
+
+Product CRUD
+
+Category CRUD
+
+Register, Login, JWT refresh va Profile
+
+Permission'lar
+
+Search, Filter, Ordering va Pagination
+
+Cart'ning barcha endpointlari
+
+Swagger Authorize
+
+Xato holatlari va edge case'lar
+
+Migration holatini tekshirish
+11. Backendni yakunlash va frontendga tayyorlash
+
+API javoblarini bir xil va tushunarli qilish
+
+DEBUG, secret key va environment sozlamalarini ishlab chiqarish muhitiga tayyorlash
+
+requirements.txt ni yangilash
+
+API endpointlari bo‘yicha qisqa hujjat tayyorlash
+
+Frontend uchun API manzili va JWT ishlash tartibini belgilash
+
+Frontend bilan integratsiya testini bajarish
+
+
+
+
+
+
+
+
+
+
+
+12. Qayerdan davom etamiz?
+Roadmap bo‘yicha hozirgi asosiy yo‘nalish — Cart API muammosini aniqlash va tuzatish, so‘ng qolgan muhim qismlarni yakunlab, umumiy test qilish.
+
+Qolgan ishlar nazorati
+0/6
+
+
+Product validation
+
+Cart API va Swagger muammosi
+
+JWT va Profile yakuniy testlari
+
+Search, Filter va Pagination testlari
+
+Umumiy API testlari
+
+Frontendga tayyorlash
+Birinchi navbatda Cart API'ning Swagger'dagi muammosini alohida ko‘rib chiqamiz. Uni tuzatmagunimizcha ishlayotgan kodni sababsiz almashtirmaymiz.
