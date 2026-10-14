@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from drf_spectacular.utils import extend_schema
+
 from products.models import Product
 from .models import Cart, CartItem
 from .serializers import (
@@ -20,12 +22,17 @@ class CartView(APIView):
 
     def get(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
+
         cart = Cart.objects.prefetch_related(
             'items__product'
         ).get(pk=cart.pk)
 
         return Response(CartSerializer(cart).data)
 
+    @extend_schema(
+        request=AddToCartSerializer,
+        responses={200: CartSerializer},
+    )
     def post(self, request):
         input_serializer = AddToCartSerializer(data=request.data)
         input_serializer.is_valid(raise_exception=True)
@@ -79,6 +86,10 @@ class CartView(APIView):
 class CartItemView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=UpdateCartItemSerializer,
+        responses={200: CartSerializer},
+    )
     def patch(self, request, item_id):
         input_serializer = UpdateCartItemSerializer(data=request.data)
         input_serializer.is_valid(raise_exception=True)
